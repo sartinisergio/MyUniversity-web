@@ -4,12 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MyUniversity — Ricerca Insegnamenti</title>
-  <script src="https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.worker.js" type="module"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.js" type="module"></script>
+
+  <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <!-- Choices.js CSS (multi-select) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
+
     header {
       background: #c8102e;
       color: white;
@@ -20,7 +24,9 @@
     }
     header h1 { font-size: 1.4rem; font-weight: 600; }
     header span { font-size: 0.9rem; opacity: 0.85; }
+
     .container { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+
     .filtri {
       background: white;
       border-radius: 10px;
@@ -29,9 +35,10 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     }
     .filtri h2 { font-size: 1rem; color: #c8102e; margin-bottom: 16px; }
+
     .filtri-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 14px;
     }
     .filtro-gruppo label {
@@ -44,7 +51,7 @@
       letter-spacing: 0.04em;
     }
     .filtro-gruppo select,
-    .filtro-gruppo input {
+    .filtro-gruppo input[type="text"] {
       width: 100%;
       padding: 8px 10px;
       border: 1px solid #ddd;
@@ -53,15 +60,40 @@
       background: #fafafa;
     }
     .filtro-gruppo select:focus,
-    .filtro-gruppo input:focus {
+    .filtro-gruppo input[type="text"]:focus {
       outline: none;
       border-color: #c8102e;
       background: white;
     }
+
+    /* Override Choices.js per stile coerente */
+    .choices__inner {
+      background: #fafafa !important;
+      border: 1px solid #ddd !important;
+      border-radius: 6px !important;
+      min-height: 38px !important;
+      font-size: 0.85rem !important;
+      padding: 4px 8px !important;
+    }
+    .choices__inner:focus-within {
+      border-color: #c8102e !important;
+      background: white !important;
+    }
+    .choices__list--dropdown { border-color: #c8102e !important; font-size: 0.85rem !important; }
+    .choices__item--selectable.is-highlighted { background: #fde8ec !important; color: #c8102e !important; }
+    .choices__item.choices__item--choice.is-selected { color: #c8102e; font-weight: 600; }
+    .choices[data-type*="select-multiple"] .choices__inner .choices__item {
+      background: #c8102e !important;
+      border-color: #a50d26 !important;
+      font-size: 0.75rem !important;
+    }
+    .choices__placeholder { color: #aaa !important; font-size: 0.85rem !important; }
+
     .btn-row {
       display: flex;
       gap: 10px;
       margin-top: 16px;
+      flex-wrap: wrap;
     }
     button {
       padding: 9px 22px;
@@ -70,11 +102,16 @@
       cursor: pointer;
       font-size: 0.9rem;
       font-weight: 600;
+      transition: background 0.15s;
     }
-    #btn-cerca { background: #c8102e; color: white; }
-    #btn-reset { background: #eee; color: #555; }
-    #btn-cerca:hover { background: #a50d26; }
-    #btn-reset:hover { background: #ddd; }
+    #btn-cerca    { background: #c8102e; color: white; }
+    #btn-reset    { background: #eee; color: #555; }
+    #btn-export   { background: #1a7a4a; color: white; }
+    #btn-cerca:hover  { background: #a50d26; }
+    #btn-reset:hover  { background: #ddd; }
+    #btn-export:hover { background: #155f39; }
+    #btn-export:disabled { background: #aaa; cursor: not-allowed; }
+
     .risultati {
       background: white;
       border-radius: 10px;
@@ -86,21 +123,14 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    #contatore {
-      font-size: 0.9rem;
-      color: #666;
-    }
+    #contatore { font-size: 0.9rem; color: #666; }
     #contatore strong { color: #c8102e; }
-    #status {
-      font-size: 0.85rem;
-      color: #999;
-      font-style: italic;
-    }
-    table#tabella {
-      width: 100% !important;
-      font-size: 0.85rem;
-    }
+    #status { font-size: 0.85rem; color: #999; font-style: italic; }
+
+    table#tabella { width: 100% !important; font-size: 0.85rem; }
     table#tabella thead th {
       background: #f0f0f0;
       color: #444;
@@ -108,27 +138,127 @@
       white-space: nowrap;
     }
     table#tabella tbody tr:hover { background: #fff8f8; }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-triennale   { background: #e3f0ff; color: #1a5fa8; }
+    .badge-magistrale  { background: #fff3e0; color: #e65100; }
+    .badge-ciclo_unico { background: #e8f5e9; color: #2e7d32; }
+
+    a.link-ins { color: #c8102e; text-decoration: none; font-size: 0.85rem; }
+    a.link-ins:hover { text-decoration: underline; }
+
+    .btn-piano {
+      background: none;
+      border: 1px solid #c8102e;
+      color: #c8102e;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
       font-size: 0.75rem;
       font-weight: 600;
+      white-space: nowrap;
     }
-    .badge-triennale { background: #e3f0ff; color: #1a5fa8; }
-    .badge-magistrale { background: #fff3e0; color: #e65100; }
-    .badge-ciclo_unico { background: #e8f5e9; color: #2e7d32; }
-    a.link-ins {
+    .btn-piano:hover { background: #fde8ec; }
+
+    .loading { text-align: center; padding: 40px; color: #999; font-size: 1rem; }
+
+    /* ── MODALE PIANO DI STUDI ── */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-overlay.aperto { display: flex; }
+    #modal-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-header {
+      background: #c8102e;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-modal {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    #btn-chiudi-modal:hover { background: rgba(255,255,255,0.4); }
+    #modal-body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+
+    .anno-block { margin-bottom: 24px; }
+    .anno-block h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
       color: #c8102e;
-      text-decoration: none;
-      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #fde8ec;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
     }
-    a.link-ins:hover { text-decoration: underline; }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #999;
-      font-size: 1rem;
+    .piano-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .piano-table th {
+      background: #f5f5f5;
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+    }
+    .piano-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+    .piano-table tr:hover td { background: #fff8f8; }
+    .piano-table a { color: #c8102e; text-decoration: none; }
+    .piano-table a:hover { text-decoration: underline; }
+
+    /* Badge trasversale */
+    .badge-trasv {
+      background: #f3e8ff;
+      color: #6b21a8;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+
+    /* Highlight cascata */
+    .cascata-attiva .choices__inner {
+      border-color: #1a7a4a !important;
+      background: #f0fff7 !important;
+    }
+    .cascata-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #d1fae5;
+      color: #065f46;
+      border-radius: 8px;
+      padding: 1px 7px;
+      margin-left: 6px;
+      font-weight: 600;
+      vertical-align: middle;
     }
   </style>
 </head>
@@ -143,68 +273,62 @@
 
 <div class="container">
 
+  <!-- ── FILTRI ── -->
   <div class="filtri">
     <h2>🔍 Filtri di ricerca</h2>
     <div class="filtri-grid">
 
       <div class="filtro-gruppo">
-        <label>Cerca insegnamento</label>
-        <input type="text" id="f-insegnamento" placeholder="es. analisi matematica...">
-      </div>
+  <label>Cerca insegnamento</label>
+  <input type="text" id="f-insegnamento" 
+         placeholder="es. biochimica, chimica biologica...">
+  <small style="color:#999; font-size:0.72rem; margin-top:4px; display:block; line-height:1.4">
+    Spazio = AND &nbsp;·&nbsp; Virgola = OR<br>
+    es: <em>biochimica molecolare, chimica biologica</em>
+  </small>
+</div>
 
       <div class="filtro-gruppo">
         <label>Area SSD</label>
-        <select id="f-area">
-          <option value="">— Tutte le aree —</option>
-        </select>
+        <select id="f-area" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Codice SSD</label>
-        <select id="f-ssd">
-          <option value="">— Tutti i codici —</option>
-        </select>
+        <select id="f-ssd" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Zona geografica</label>
-        <select id="f-zona">
-          <option value="">— Tutte le zone —</option>
-        </select>
+        <select id="f-zona" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Regione</label>
-        <select id="f-regione">
-          <option value="">— Tutte le regioni —</option>
-        </select>
+        <select id="f-regione" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Ateneo</label>
-        <select id="f-ateneo">
-          <option value="">— Tutti gli atenei —</option>
-        </select>
+        <select id="f-ateneo" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Tipologia corso</label>
-        <select id="f-tipologia">
-          <option value="">— Tutte —</option>
-        </select>
+        <select id="f-tipologia" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
-        <label>Classe di laurea</label>
-        <select id="f-classe">
-          <option value="">— Tutte le classi —</option>
-        </select>
+        <label>
+          Classe di laurea
+          <span id="cascata-badge" class="cascata-badge" style="display:none">filtrata per SSD</span>
+        </label>
+        <select id="f-classe" multiple></select>
       </div>
 
       <div class="filtro-gruppo">
         <label>Anno di corso</label>
-        <select id="f-anno">
-          <option value="">— Tutti —</option>
+        <select id="f-anno" multiple>
           <option value="1">1° anno</option>
           <option value="2">2° anno</option>
           <option value="3">3° anno</option>
@@ -215,12 +339,15 @@
       </div>
 
     </div>
+
     <div class="btn-row">
       <button id="btn-cerca">🔍 Cerca</button>
       <button id="btn-reset">↺ Reset</button>
+      <button id="btn-export" disabled>⬇ Esporta CSV</button>
     </div>
   </div>
 
+  <!-- ── RISULTATI ── -->
   <div class="risultati">
     <div class="risultati-header">
       <div id="contatore">Inserisci i filtri e premi Cerca</div>
@@ -233,20 +360,42 @@
 
 </div>
 
+<!-- ── MODALE PIANO DI STUDI ── -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <div>
+        <h3 id="modal-titolo">Piano di studi</h3>
+        <p id="modal-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-modal">✕ Chiudi</button>
+    </div>
+    <div id="modal-body">
+      <div class="loading">Caricamento piano di studi...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
 <script type="module">
   import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
 
+  // ── Stato globale ──────────────────────────────────────────
   let db, conn;
+  let ultimiRisultati = [];   // cache ultima query per export
+  let choicesMap = {};        // mappa id → istanza Choices
+  let lookupClassi = {};      // nome_classe → codice ministeriale
 
-  // ── Inizializzazione DuckDB ──────────────────────────────
+  // ── Inizializzazione DuckDB ────────────────────────────────
   async function initDuckDB() {
     const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
     const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
     const worker_url = URL.createObjectURL(
-      new Blob([`importScripts("${bundle.mainWorker}");`],
-      { type: 'text/javascript' })
+      new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
     );
     const worker = new Worker(worker_url);
     const logger = new duckdb.ConsoleLogger();
@@ -257,19 +406,16 @@
     await caricaCSV();
   }
 
-  // ── Caricamento CSV ──────────────────────────────────────
+  // ── Caricamento CSV ────────────────────────────────────────
   async function caricaCSV() {
-    // Carica insegnamenti
-    const respIns = await fetch('insegnamenti.csv');
-    const csvIns  = await respIns.text();
+    const [respIns, respLau] = await Promise.all([
+      fetch('insegnamenti.csv'),
+      fetch('lauree.csv')
+    ]);
+    const [csvIns, csvLau] = await Promise.all([respIns.text(), respLau.text()]);
     await db.registerFileText('insegnamenti.csv', csvIns);
-
-    // Carica lauree
-    const respLau = await fetch('lauree.csv');
-    const csvLau  = await respLau.text();
     await db.registerFileText('lauree.csv', csvLau);
 
-    // Crea tabelle
     await conn.query(`
       CREATE TABLE insegnamenti AS
       SELECT * FROM read_csv_auto('insegnamenti.csv', header=true, ignore_errors=true);
@@ -285,17 +431,48 @@
 
     await popolaFiltri();
     inizializzaTabella();
+    inizializzaChoices();
+    document.getElementById('btn-export').disabled = false;
   }
 
-  // ── Popola i dropdown dai dati reali ────────────────────
+  // ── Choices.js: inizializza tutti i multi-select ──────────
+  function inizializzaChoices() {
+    const ids = ['f-area','f-ssd','f-zona','f-regione','f-ateneo','f-tipologia','f-classe','f-anno'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      choicesMap[id] = new Choices(el, {
+        removeItemButton: true,
+        searchEnabled: true,
+        searchPlaceholderValue: 'Cerca...',
+        itemSelectText: '',
+        noResultsText: 'Nessun risultato',
+        noChoicesText: 'Nessuna opzione disponibile',
+        placeholder: true,
+        placeholderValue: '— Tutti —',
+        shouldSort: false,
+      });
+    });
+    // Cascata: quando cambia SSD, Area o Tipologia → aggiorna classi
+document.getElementById('f-ssd').addEventListener('addItem', aggiornaCascataClassi);
+document.getElementById('f-ssd').addEventListener('removeItem', aggiornaCascataClassi);
+document.getElementById('f-area').addEventListener('addItem', aggiornaCascataClassi);
+document.getElementById('f-area').addEventListener('removeItem', aggiornaCascataClassi);
+document.getElementById('f-tipologia').addEventListener('addItem', aggiornaCascataClassi);
+document.getElementById('f-tipologia').addEventListener('removeItem', aggiornaCascataClassi);
+  }
+
+  // ── Popola dropdown dai dati reali ────────────────────────
   async function popolaFiltri() {
-    const query = (col, tabella) =>
-      conn.query(`SELECT DISTINCT ${col} FROM ${tabella}
-                  WHERE ${col} IS NOT NULL
-                  ORDER BY ${col}`);
+    // Carica lookup classi
+    try {
+      const rispLookup = await fetch('classi_lookup.json');
+      lookupClassi = await rispLookup.json();
+    } catch(e) { lookupClassi = {}; }
 
     const fill = async (selectId, col, tabella) => {
-      const res = await query(col, tabella);
+      const res = await conn.query(
+        `SELECT DISTINCT ${col} FROM ${tabella} WHERE ${col} IS NOT NULL ORDER BY ${col}`
+      );
       const sel = document.getElementById(selectId);
       res.toArray().forEach(r => {
         const v = String(Object.values(r)[0]);
@@ -307,12 +484,10 @@
       });
     };
 
-    // Estrai area SSD dal codice (es. BIO da BIO/09)
+    // Area SSD (es. BIO da BIO/09)
     const aree = await conn.query(`
       SELECT DISTINCT regexp_extract(ssd, '^([A-Z]+)/', 1) AS area
-      FROM insegnamenti
-      WHERE ssd IS NOT NULL AND ssd != ''
-      ORDER BY area
+      FROM insegnamenti WHERE ssd IS NOT NULL AND ssd != '' ORDER BY area
     `);
     const selArea = document.getElementById('f-area');
     aree.toArray().forEach(r => {
@@ -324,12 +499,10 @@
       }
     });
 
-    // Estrai codice SSD (es. BIO/09)
+    // Codice SSD (es. BIO/09)
     const ssdCodici = await conn.query(`
       SELECT DISTINCT regexp_extract(ssd, '^([^ ]+)', 1) AS codice
-      FROM insegnamenti
-      WHERE ssd IS NOT NULL AND ssd != ''
-      ORDER BY codice
+      FROM insegnamenti WHERE ssd IS NOT NULL AND ssd != '' ORDER BY codice
     `);
     const selSsd = document.getElementById('f-ssd');
     ssdCodici.toArray().forEach(r => {
@@ -341,134 +514,255 @@
       }
     });
 
-    await fill('f-zona',      'zona',        'insegnamenti');
-    await fill('f-regione',   'regione',      'insegnamenti');
-    await fill('f-ateneo',    'ateneo',       'insegnamenti');
-    await fill('f-tipologia', 'tipologia',    'insegnamenti');
-    // Carica lookup classi
-const rispLookup = await fetch('classi_lookup.json');
-const lookup = await rispLookup.json();
+    await fill('f-zona',      'zona',     'insegnamenti');
+    await fill('f-regione',   'regione',  'insegnamenti');
+    await fill('f-ateneo',    'ateneo',   'insegnamenti');
+    await fill('f-tipologia', 'tipologia','insegnamenti');
 
-// Popola dropdown classi ordinato per codice ministeriale
-const classiRes = await conn.query(`
-  SELECT DISTINCT nome_classe FROM insegnamenti
-  WHERE nome_classe IS NOT NULL
-`);
-
-// Funzione per ordinare i codici ministeriali
-function ordinaCodice(codice) {
-  if (!codice) return 'ZZZ';
-  // L- prima di LM- prima di LMG- ecc.
-  const prefissi = {'L-': '1', 'L/': '2', 'LM-': '3', 'LM/': '4', 'LMG': '5', 'LMR': '6'};
-  let prefisso = '9';
-  for (const [p, v] of Object.entries(prefissi)) {
-    if (codice.startsWith(p)) { prefisso = v; break; }
-  }
-  // Estrai numero per ordinamento numerico corretto
-  const num = parseInt(codice.replace(/[^0-9]/g, '')) || 999;
-  return prefisso + String(num).padStart(4, '0');
-}
-
-const selClasse = document.getElementById('f-classe');
-const voci = [];
-
-classiRes.toArray().forEach(r => {
-  const nome = String(r.nome_classe);
-  if (nome && nome !== 'null') {
-    const codice = lookup[nome.toLowerCase()] || '';
-    voci.push({ nome, codice, sort: ordinaCodice(codice) });
-  }
-});
-
-// Ordina per codice
-voci.sort((a, b) => a.sort.localeCompare(b.sort));
-
-voci.forEach(({ nome, codice }) => {
-  const opt = document.createElement('option');
-  opt.value = nome;
-  opt.textContent = codice ? `${codice} · ${nome}` : nome;
-  selClasse.appendChild(opt);
-});
+    await popolaClassi(null); // carica tutte le classi inizialmente
   }
 
-  // ── Costruisce la WHERE clause dai filtri ────────────────
+  // ── Popola (o ricarica) il dropdown delle classi ──────────
+  async function popolaClassi(filtroSsd, filtroTipologia = []) {
+    // filtroSsd = array di codici SSD selezionati, oppure null = tutti
+    const conditions = [];
+
+    if (filtroSsd && filtroSsd.length > 0) {
+      const listaSsd = filtroSsd.map(s => `'${s.replace(/'/g,"''")}'`).join(',');
+      conditions.push(
+        `regexp_extract(ssd, '^([^ ]+)', 1) IN (${listaSsd})`
+      );
+    }
+
+    if (filtroTipologia && filtroTipologia.length > 0) {
+      const listaTip = filtroTipologia.map(t => `'${t.replace(/'/g,"''")}'`).join(',');
+      conditions.push(`tipologia IN (${listaTip})`);
+    }
+
+    const whereClause = conditions.length > 0
+      ? `WHERE nome_classe IS NOT NULL AND ${conditions.join(' AND ')}`
+      : `WHERE nome_classe IS NOT NULL`;
+
+    const sql = `SELECT DISTINCT nome_classe FROM insegnamenti ${whereClause}`;
+    const classiRes = await conn.query(sql);
+
+    function ordinaCodice(codice) {
+      if (!codice) return 'ZZZ';
+      const prefissi = {'L-':'1','L/':'2','LM-':'3','LM/':'4','LMG':'5','LMR':'6'};
+      let prefisso = '9';
+      for (const [p, v] of Object.entries(prefissi)) {
+        if (codice.startsWith(p)) { prefisso = v; break; }
+      }
+      const num = parseInt(codice.replace(/[^0-9]/g, '')) || 999;
+      return prefisso + String(num).padStart(4, '0');
+    }
+
+    const voci = [];
+    classiRes.toArray().forEach(r => {
+      const nome = String(r.nome_classe);
+      if (nome && nome !== 'null') {
+        const codice = lookupClassi[nome.toLowerCase()] || '';
+        voci.push({ nome, codice, sort: ordinaCodice(codice) });
+      }
+    });
+    voci.sort((a, b) => a.sort.localeCompare(b.sort));
+
+    // Aggiorna istanza Choices per f-classe
+    const ch = choicesMap['f-classe'];
+    if (ch) {
+      ch.clearChoices();
+      ch.setChoices(
+        voci.map(({ nome, codice }) => ({
+          value: nome,
+          label: codice ? `${codice} · ${nome}` : nome,
+        })),
+        'value', 'label', true
+      );
+    } else {
+      // Choices non ancora inizializzato: popola il <select> raw
+      const sel = document.getElementById('f-classe');
+      sel.innerHTML = '';
+      voci.forEach(({ nome, codice }) => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        opt.textContent = codice ? `${codice} · ${nome}` : nome;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  // ── Cascata: SSD/Area → Classi ─────────────────────────────
+  async function aggiornaCascataClassi() {
+    if (!conn) return;
+    const ssdSel  = choicesMap['f-ssd']  ? choicesMap['f-ssd'].getValue(true)  : [];
+    const areaSel = choicesMap['f-area'] ? choicesMap['f-area'].getValue(true) : [];
+    const tipSel  = choicesMap['f-tipologia'] ? choicesMap['f-tipologia'].getValue(true) : [];
+
+    // Ricava tutti i codici SSD relativi alle aree selezionate
+    let tuttiSsd = [...ssdSel];
+    if (areaSel.length > 0) {
+      const listaAree = areaSel.map(a => `'${a.replace(/'/g,"''")}'`).join(',');
+      const res = await conn.query(`
+        SELECT DISTINCT regexp_extract(ssd, '^([^ ]+)', 1) AS codice
+        FROM insegnamenti
+        WHERE regexp_extract(ssd, '^([A-Z]+)/', 1) IN (${listaAree})
+          AND ssd IS NOT NULL AND ssd != ''
+      `);
+      res.toArray().forEach(r => {
+        const v = String(r.codice);
+        if (v && v !== 'null' && !tuttiSsd.includes(v)) tuttiSsd.push(v);
+      });
+    }
+
+    const haSelezione = tuttiSsd.length > 0 || tipSel.length > 0;
+    await popolaClassi(tuttiSsd.length > 0 ? tuttiSsd : null, tipSel);
+
+    // Feedback visivo cascata
+    const badge  = document.getElementById('cascata-badge');
+    const gruppo = document.getElementById('f-classe').closest('.filtro-gruppo');
+    badge.style.display  = haSelezione ? 'inline-block' : 'none';
+    badge.textContent    = [
+      tuttiSsd.length > 0 ? 'filtrata per SSD' : '',
+      tipSel.length > 0   ? 'filtrata per tipologia' : ''
+    ].filter(Boolean).join(' · ');
+    gruppo.classList.toggle('cascata-attiva', haSelezione);
+  }
+  // ── buildWhere: supporta selezione multipla ───────────────
+  function getVals(id) {
+    const ch = choicesMap[id];
+    if (ch) return ch.getValue(true);        // array di valori selezionati
+    const el = document.getElementById(id);
+    return el ? [el.value].filter(Boolean) : [];
+  }
+
+  function inClause(col, vals) {
+    if (!vals || vals.length === 0) return null;
+    if (vals.length === 1) return `${col} = '${vals[0].replace(/'/g,"''")}'`;
+    return `${col} IN (${vals.map(v => `'${v.replace(/'/g,"''")}'`).join(',')})`;
+  }
+
   function buildWhere() {
     const clauses = [];
 
     const ins = document.getElementById('f-insegnamento').value.trim();
-    if (ins) clauses.push(
-      `lower(i.insegnamento) LIKE '%${ins.toLowerCase().replace(/'/g,"''")}%'`
+if (ins) {
+  // Splitta per virgola → gruppi in OR
+  const gruppiOR = ins.split(',')
+    .map(g => g.trim())
+    .filter(g => g.length > 0);
+
+  const clausoleOR = gruppiOR.map(gruppo => {
+    // Dentro ogni gruppo, splitta per spazio → parole in AND
+    const paroleAND = gruppo.split(/\s+/)
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
+
+    if (paroleAND.length === 1) {
+      // Una sola parola → LIKE semplice
+      return `lower(i.insegnamento) LIKE '%${paroleAND[0].toLowerCase().replace(/'/g,"''")}%'`;
+    } else {
+      // Più parole → AND tra tutti i LIKE
+      return '(' + paroleAND
+        .map(p => `lower(i.insegnamento) LIKE '%${p.toLowerCase().replace(/'/g,"''")}%'`)
+        .join(' AND ') + ')';
+    }
+  });
+
+  // Unisce i gruppi in OR
+  if (clausoleOR.length === 1) {
+    clauses.push(clausoleOR[0]);
+  } else {
+    clauses.push('(' + clausoleOR.join(' OR ') + ')');
+  }
+}
+    const area = getVals('f-area');
+    if (area.length) clauses.push(
+      `regexp_extract(i.ssd, '^([A-Z]+)/', 1) IN (${area.map(a=>`'${a.replace(/'/g,"''")}'`).join(',')})`
     );
 
-    const area = document.getElementById('f-area').value;
-    if (area) clauses.push(
-      `regexp_extract(i.ssd, '^([A-Z]+)/', 1) = '${area}'`
+    const ssd = getVals('f-ssd');
+    if (ssd.length) clauses.push(
+      `regexp_extract(i.ssd, '^([^ ]+)', 1) IN (${ssd.map(s=>`'${s.replace(/'/g,"''")}'`).join(',')})`
     );
 
-    const ssd = document.getElementById('f-ssd').value;
-    if (ssd) clauses.push(
-      `regexp_extract(i.ssd, '^([^ ]+)', 1) = '${ssd}'`
-    );
+    const zona = getVals('f-zona');
+    const c1 = inClause('i.zona', zona); if (c1) clauses.push(c1);
 
-    const zona = document.getElementById('f-zona').value;
-    if (zona) clauses.push(`i.zona = '${zona.replace(/'/g,"''")}'`);
+    const reg = getVals('f-regione');
+    const c2 = inClause('i.regione', reg); if (c2) clauses.push(c2);
 
-    const reg = document.getElementById('f-regione').value;
-    if (reg) clauses.push(`i.regione = '${reg.replace(/'/g,"''")}'`);
+    const ate = getVals('f-ateneo');
+    const c3 = inClause('i.ateneo', ate); if (c3) clauses.push(c3);
 
-    const ate = document.getElementById('f-ateneo').value;
-    if (ate) clauses.push(`i.ateneo = '${ate.replace(/'/g,"''")}'`);
+    const tip = getVals('f-tipologia');
+    const c4 = inClause('i.tipologia', tip); if (c4) clauses.push(c4);
 
-    const tip = document.getElementById('f-tipologia').value;
-    if (tip) clauses.push(`i.tipologia = '${tip.replace(/'/g,"''")}'`);
+    const cls = getVals('f-classe');
+    const c5 = inClause('i.nome_classe', cls); if (c5) clauses.push(c5);
 
-    const cls = document.getElementById('f-classe').value;
-    if (cls) clauses.push(`i.nome_classe = '${cls.replace(/'/g,"''")}'`);
-
-    const anno = document.getElementById('f-anno').value;
-    if (anno) clauses.push(`i.anno_ins = ${anno}`);
+    const anno = getVals('f-anno');
+    if (anno.length) {
+      clauses.push(`i.anno_ins IN (${anno.join(',')})`);
+    }
 
     return clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   }
 
-  // ── DataTable ────────────────────────────────────────────
+  // ── DataTable ──────────────────────────────────────────────
   let dtTable = null;
 
   function inizializzaTabella() {
     dtTable = $('#tabella').DataTable({
       data: [],
       columns: [
-        { title: 'Insegnamento',   data: 'insegnamento' },
-        { title: 'SSD',            data: 'ssd' },
-        { title: 'Ateneo',         data: 'ateneo' },
-        { title: 'Laurea',         data: 'laurea' },
-        { title: 'Tipologia',      data: 'tipologia',
-          render: v => `<span class="badge badge-${v}">${v}</span>` },
-        { title: 'A.',             data: 'anno_ins' },
-        { title: 'CFU',            data: 'cfu' },
-        { title: 'Curriculum',     data: 'n_curriculum',
+        { title: 'Insegnamento',  data: 'insegnamento' },
+        { title: 'SSD',           data: 'ssd' },
+        { title: 'Ateneo',        data: 'ateneo' },
+        { title: 'Laurea',        data: 'laurea' },
+        { title: 'Tipologia',     data: 'tipologia',
+          render: v => `<span class="badge badge-${(v||'').replace(/\s/g,'_')}">${v||''}</span>` },
+        { title: 'A.',            data: 'anno_ins' },
+        { title: 'CFU',           data: 'cfu' },
+        { title: 'Curriculum',    data: 'n_curriculum',
           render: (v, _, row) =>
             v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista },
-        { title: 'Link',           data: 'url_ins',
+        { title: 'Link',          data: 'url_ins',
           render: v => v && v !== 'NA' && v !== 'null'
-            ? `<a class="link-ins" href="${v}" target="_blank">🔗</a>` : '' }
+            ? `<a class="link-ins" href="${v}" target="_blank">🔗</a>` : '' },
+        { title: '📋',            data: null,
+          orderable: false,
+          render: (_, __, row) =>
+            `<button class="btn-piano"
+               data-ateneo="${escHtml(row.ateneo)}"
+               data-laurea="${escHtml(row.laurea)}"
+               data-tipo="${escHtml(row.tipologia)}"
+               title="Visualizza piano di studi">📋</button>` }
       ],
       pageLength: 25,
-      language: {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json'
-      },
+      language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json' },
       dom: 'rtip',
-      searching: false
+      searching: false,
+      createdRow: function(row) {
+        $(row).find('.btn-piano').on('click', function() {
+          const ateneo = this.dataset.ateneo;
+          const laurea = this.dataset.laurea;
+          const tipo   = this.dataset.tipo;
+          mostraPianoDiStudi(ateneo, laurea, tipo);
+        });
+      }
     });
   }
 
-  // ── Esegui la ricerca ────────────────────────────────────
+  function escHtml(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Esegui la ricerca ──────────────────────────────────────
   async function eseguiRicerca() {
     if (!conn) return;
     document.getElementById('status').textContent = 'Ricerca in corso...';
 
     const where = buildWhere();
-
     const sql = `
       SELECT
         i.insegnamento,
@@ -494,20 +788,22 @@ voci.forEach(({ nome, codice }) => {
 
     try {
       const result = await conn.query(sql);
-      const rows   = result.toArray().map(r => {
+      const rows = result.toArray().map(r => {
         const obj = {};
-        Object.keys(r).forEach(k => obj[k] = r[k] === null ? '' : String(r[k]));
+        Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
         return obj;
       });
 
+      ultimiRisultati = rows;
       dtTable.clear().rows.add(rows).draw();
 
-      const totSql = `SELECT COUNT(*) AS n FROM insegnamenti i ${where}`;
-      const totRes = await conn.query(totSql);
-      const tot    = totRes.toArray()[0].n;
+      const totRes = await conn.query(
+        `SELECT COUNT(*) AS n FROM insegnamenti i ${where}`
+      );
+      const tot = totRes.toArray()[0].n;
 
       document.getElementById('contatore').innerHTML =
-        `<strong>${tot.toLocaleString('it-IT')}</strong> insegnamenti trovati` +
+        `<strong>${Number(tot).toLocaleString('it-IT')}</strong> insegnamenti trovati` +
         (tot > 5000 ? ' (visualizzati i primi 5.000)' : '');
       document.getElementById('status').textContent = 'Pronto';
     } catch(e) {
@@ -516,27 +812,197 @@ voci.forEach(({ nome, codice }) => {
     }
   }
 
-  // ── Event listeners ──────────────────────────────────────
-  document.getElementById('btn-cerca').addEventListener('click', eseguiRicerca);
+  // ── Export CSV ─────────────────────────────────────────────
+  function esportaCSV() {
+    if (!ultimiRisultati.length) {
+      alert('Nessun dato da esportare. Esegui prima una ricerca.');
+      return;
+    }
 
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    ['f-insegnamento','f-area','f-ssd','f-zona',
-     'f-regione','f-ateneo','f-tipologia','f-classe','f-anno']
-      .forEach(id => {
-        const el = document.getElementById(id);
-        el.tagName === 'SELECT' ? el.value = '' : el.value = '';
+    const colonne = [
+      'insegnamento','ssd','ateneo','regione','zona',
+      'laurea','nome_classe','tipologia','durata',
+      'anno_ins','cfu','n_curriculum','curriculum_lista',
+      'trasversale','url_ins'
+    ];
+
+    const intestazione = colonne.join(';');
+    const righe = ultimiRisultati.map(row =>
+      colonne.map(col => {
+        const v = row[col] ?? '';
+        // Racchiude in virgolette se contiene ; o " o newline
+        return (String(v).includes(';') || String(v).includes('"') || String(v).includes('\n'))
+          ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+      }).join(';')
+    );
+
+    const csv = '\uFEFF' + [intestazione, ...righe].join('\r\n');
+    // \uFEFF = BOM UTF-8 per Excel italiano
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `myuniversity_export_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Piano di studi ─────────────────────────────────────────
+  async function mostraPianoDiStudi(ateneo, laurea, tipologia) {
+    const overlay = document.getElementById('modal-overlay');
+    const body    = document.getElementById('modal-body');
+    const titolo  = document.getElementById('modal-titolo');
+    const sotto   = document.getElementById('modal-sottotitolo');
+
+    titolo.textContent = laurea || 'Piano di studi';
+    sotto.textContent  = `${ateneo} · ${tipologia || ''}`;
+    body.innerHTML = '<div class="loading">⏳ Caricamento piano di studi...</div>';
+    overlay.classList.add('aperto');
+
+    try {
+      const sql = `
+        SELECT
+          CAST(anno_ins AS INTEGER) AS anno_ins,
+          insegnamento,
+          ssd,
+          CAST(MAX(cfu) AS VARCHAR) AS cfu,
+          STRING_AGG(DISTINCT curriculum_lista, ' · ') AS curriculum_lista,
+          MAX(COALESCE(trasversale, '')) AS trasversale,
+          MAX(COALESCE(url_ins, '')) AS url_ins
+        FROM insegnamenti
+        WHERE ateneo = '${ateneo.replace(/'/g,"''")}' 
+          AND laurea = '${laurea.replace(/'/g,"''")}' 
+        GROUP BY anno_ins, insegnamento, ssd
+        ORDER BY anno_ins, insegnamento
+      `;
+      const res  = await conn.query(sql);
+      const rows = res.toArray().map(r => {
+        const obj = {};
+        Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+        return obj;
       });
-    dtTable.clear().draw();
-    document.getElementById('contatore').textContent =
-      'Inserisci i filtri e premi Cerca';
-  });
+
+      if (!rows.length) {
+        body.innerHTML = '<p style="color:#999;padding:20px">Nessun insegnamento trovato per questo corso.</p>';
+        return;
+      }
+
+      // Raggruppa per anno
+      const perAnno = {};
+      rows.forEach(r => {
+        const a = r.anno_ins || '?';
+        if (!perAnno[a]) perAnno[a] = [];
+        perAnno[a].push(r);
+      });
+
+      let html = '';
+      const etichette = { '1':'1° anno','2':'2° anno','3':'3° anno',
+                          '4':'4° anno','5':'5° anno','6':'6° anno','?':'Anno non specificato' };
+
+      Object.keys(perAnno).sort().forEach(anno => {
+        const ins = perAnno[anno];
+        const cfuTot = ins.reduce((s, r) => s + (parseFloat(r.cfu) || 0), 0);
+        html += `<div class="anno-block">
+          <h4>${etichette[anno] || anno + '° anno'} — ${ins.length} insegnamenti · ${cfuTot} CFU totali</h4>
+          <table class="piano-table">
+            <thead>
+              <tr>
+                <th>Insegnamento</th>
+                <th>SSD</th>
+                <th>CFU</th>
+                <th>Curriculum</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        ins.forEach(r => {
+          const trasv = r.trasversale === '1' || r.trasversale === 'true'
+            ? '<span class="badge-trasv">trasversale</span>' : '';
+          const link = r.url_ins && r.url_ins !== 'NA' && r.url_ins !== 'null'
+            ? `<a href="${escHtml(r.url_ins)}" target="_blank">🔗</a>` : '';
+          html += `<tr>
+            <td>${escHtml(r.insegnamento)}${trasv}</td>
+            <td>${escHtml(r.ssd)}</td>
+            <td>${escHtml(r.cfu)}</td>
+            <td>${escHtml(r.curriculum_lista)}</td>
+            <td>${link}</td>
+          </tr>`;
+        });
+   html += `</tbody></table></div>`;
+      });
+
+      // Riepilogo totale
+      const totIns = rows.length;
+      const totCfu = rows.reduce((s, r) => s + (parseFloat(r.cfu) || 0), 0);
+      html = `<div style="background:#fde8ec;border-radius:8px;padding:12px 16px;
+                          margin-bottom:20px;font-size:0.85rem;color:#c8102e;font-weight:600;">
+        📊 Riepilogo: <strong>${totIns}</strong> insegnamenti totali · 
+        <strong>${totCfu}</strong> CFU complessivi
+      </div>` + html;
+
+      body.innerHTML = html;
+
+    } catch(e) {
+      console.error(e);
+      body.innerHTML = '<p style="color:red;padding:20px">Errore nel caricamento del piano di studi.</p>';
+    }
+  }
+
+  // ── Reset filtri ───────────────────────────────────────────
+  function resetFiltri() {
+    document.getElementById('f-insegnamento').value = '';
+
+    // Reset tutti i Choices
+    Object.values(choicesMap).forEach(ch => ch.removeActiveItems());
+
+    // Ripristina classi complete (senza cascata)
+    popolaClassi(null);
+    document.getElementById('cascata-badge').style.display = 'none';
+    document.getElementById('f-classe')
+      .closest('.filtro-gruppo')
+      .classList.remove('cascata-attiva');
+
+    // Svuota tabella
+    if (dtTable) dtTable.clear().draw();
+    ultimiRisultati = [];
+    document.getElementById('contatore').textContent = 'Inserisci i filtri e premi Cerca';
+  }
+
+  // ── Event listeners ────────────────────────────────────────
+  document.getElementById('btn-cerca')
+    .addEventListener('click', eseguiRicerca);
+
+  document.getElementById('btn-reset')
+    .addEventListener('click', resetFiltri);
+
+  document.getElementById('btn-export')
+    .addEventListener('click', esportaCSV);
 
   document.getElementById('f-insegnamento')
     .addEventListener('keydown', e => {
       if (e.key === 'Enter') eseguiRicerca();
     });
 
-  // ── Avvio ────────────────────────────────────────────────
+  // Chiusura modale
+  document.getElementById('btn-chiudi-modal')
+    .addEventListener('click', () => {
+      document.getElementById('modal-overlay').classList.remove('aperto');
+    });
+  document.getElementById('modal-overlay')
+    .addEventListener('click', e => {
+      if (e.target === document.getElementById('modal-overlay')) {
+        document.getElementById('modal-overlay').classList.remove('aperto');
+      }
+    });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('modal-overlay').classList.remove('aperto');
+    }
+  });
+
+  // ── Avvio ──────────────────────────────────────────────────
   initDuckDB().catch(err => {
     console.error(err);
     document.getElementById('status').textContent = 'Errore caricamento';
@@ -544,6 +1010,7 @@ voci.forEach(({ nome, codice }) => {
       '<p style="color:red;padding:20px">Errore nel caricamento dei dati. ' +
       'Assicurati che i file CSV siano nella stessa cartella di index.html.</p>';
   });
+
 </script>
 
 </body>
