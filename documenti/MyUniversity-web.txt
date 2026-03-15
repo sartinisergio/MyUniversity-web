@@ -1,0 +1,200 @@
+library(arrow)
+library(dplyr)
+library(readr)
+
+# ============================================================
+# CONFIGURAZIONE — modifica solo questi percorsi
+# ============================================================
+PATH_INSEGNAMENTI <- "C:/tuopercorso/insegnamenti.csv"
+PATH_LAUREE       <- "C:/tuoPercorso/lauree.csv"
+PATH_OUTPUT       <- "C:/tuoPercorso/output/"   # cartella di destinazione
+
+# ============================================================
+# STEP 1 — Lettura dei CSV
+# ============================================================
+cat("Lettura insegnamenti...\n")
+insegnamenti_raw <- read_csv(
+  PATH_INSEGNAMENTI,
+  locale = locale(encoding = "UTF-8"),
+  show_col_types = FALSE
+)
+cat(paste("Righe caricate:", nrow(insegnamenti_raw), "\n"))
+
+cat("Lettura lauree...\n")
+lauree_raw <- read_csv(
+  PATH_LAUREE,
+  locale = locale(encoding = "UTF-8"),
+  show_col_types = FALSE
+)
+cat(paste("Righe caricate:", nrow(lauree_raw), "\n"))
+
+# ============================================================
+# STEP 2 — Selezione colonne utili per MyUniversity Web
+# ============================================================
+
+# Colonne insegnamenti: solo quelle rilevanti per ricerca e
+# analisi commerciale (potenziale adozioni per SSD/ateneo)
+insegnamenti <- insegnamenti_raw |>
+  select(
+    anno_acc,
+    id_ateneo,
+    id_laurea,
+    zona,
+    regione,
+    ateneo,
+    tipologia,
+    durata,
+    laurea,
+    codice_classe,
+    nome_classe,
+    ssd,
+    ambito_disciplinare,
+    insegnamento,
+    anno_ins,
+    cfu,
+    cfu_obbligatori,
+    url_ins
+  ) |>
+  # Pulizia: rimuovi righe senza SSD (non utili per ricerca editoriale)
+  filter(!is.na(ssd), ssd != "") |>
+  # Normalizza testo per ricerca case-insensitive
+  mutate(
+    insegnamento_search = tolower(insegnamento),
+    ssd                 = toupper(trimws(ssd)),
+    ateneo              = trimws(ateneo),
+    regione             = trimws(regione),
+    zona                = trimws(zona)
+  )
+
+cat(paste("Righe insegnamenti dopo pulizia:", nrow(insegnamenti), "\n"))
+
+# Colonne lauree: focus su dati quantitativi (iscritti = potenziale commerciale)
+lauree <- lauree_raw |>
+  select(
+    anno_acc,
+    id_ateneo,
+    id_laurea,
+    zona,
+    regione,
+    ateneo,
+    tipologia,
+    durata,
+    laurea,
+    codice_classe,
+    nome_classe,
+    isc_1anno,
+    isc_totali,
+    url_corso
+  ) |>
+  mutate(
+    ateneo  = trimws(ateneo),
+    regione = trimws(regione)
+  )
+
+cat(paste("Righe lauree dopo pulizia:", nrow(lauree), "\n"))
+
+# ============================================================
+# STEP 2bis — Deduplicazione insegnamenti per curriculum
+# ============================================================
+
+# Chiave univoca di un insegnamento:
+# stesso ateneo + stesso corso di laurea + stesso SSD +
+# stesso nome insegnamento + stesso anno di corso + stessi CFU
+# La variabile che genera duplicati è: curriculum
+
+cat("Deduplicazione insegnamenti per curriculum...\n")
+cat(paste("Righe prima della deduplicazione:", nrow(insegnamenti), "\n"))
+
+insegnamenti <- insegnamenti |>
+  group_by(
+    anno_acc,
+    id_ateneo,
+    id_laurea,
+    zona,
+    regione,
+    ateneo,
+    tipologia,
+    durata,
+    laurea,
+    codice_classe,
+    nome_classe,
+    ssd,
+    ambito_disciplinare,
+    insegnamento,
+    insegnamento_search,
+    anno_ins,
+    cfu,
+    cfu_obbligatori,
+    url_ins
+  ) |>
+  summarise(
+    # Conta quanti curriculum prevedono questo insegnamento
+    n_curriculum     = n(),
+    # Concatena i nomi dei curriculum (es. "Generale; Clinico; Sperimentale")
+    curriculum_lista = paste(
+                         sort(unique(na.omit(curriculum))),
+                         collapse = "; "
+                       ),
+    .groups = "drop"
+  ) |>
+  # Flag leggibile: insegnamento comune a tutti o solo alcuni curriculum
+  mutate(
+    trasversale = case_when(
+      n_curriculum == 1 ~ "curriculum unico",
+      n_curriculum <= 3 ~ "alcuni curriculum",
+      TRUE              ~ "tutti i curriculum"
+    )
+  )
+
+cat(paste("Righe dopo la deduplicazione:", nrow(insegnamenti), "\n"))
+cat(paste("Righe eliminate:", 
+    nrow(insegnamenti_raw) - nrow(insegnamenti), "\n"))
+
+# ============================================================
+# STEP 3 — Creazione lista valori unici per i filtri
+#           (dropdown dell'interfaccia web)
+# ============================================================
+filtri <- list(
+  ssd       = sort(unique(insegnamenti$ssd)),
+  ateneo    = sort(unique(insegnamenti$ateneo)),
+  regione   = sort(unique(insegnamenti$regione)),
+  zona      = sort(unique(insegnamenti$zona)),
+  tipologia = sort(unique(insegnamenti$tipologia)),
+  durata    = sort(unique(insegnamenti$durata))
+)
+
+# Esporta i filtri come JSON (verranno usati nell'HTML per popolare i dropdown)
+library(jsonlite)
+write_json(filtri, file.path(PATH_OUTPUT, "filtri.json"), pretty = FALSE, auto_unbox = TRUE)
+cat("filtri.json scritto.\n")
+
+# ============================================================
+# STEP 4 — Export in Parquet (formato ottimizzato per DuckDB-WASM)
+# ============================================================
+if (!dir.exists(PATH_OUTPUT)) dir.create(PATH_OUTPUT, recursive = TRUE)
+
+cat("Scrittura insegnamenti.parquet...\n")
+write_parquet(
+  insegnamenti,
+  file.path(PATH_OUTPUT, "insegnamenti.parquet"),
+  compression = "snappy"    # compressione veloce, ottima per browser
+)
+
+cat("Scrittura lauree.parquet...\n")
+write_parquet(
+  lauree,
+  file.path(PATH_OUTPUT, "lauree.parquet"),
+  compression = "snappy"
+)
+
+# ============================================================
+# STEP 5 — Report dimensioni file
+# ============================================================
+size_ins <- file.size(file.path(PATH_OUTPUT, "insegnamenti.parquet"))
+size_lau <- file.size(file.path(PATH_OUTPUT, "lauree.parquet"))
+
+cat("\n===== REPORT FINALE =====\n")
+cat(paste("insegnamenti.parquet :", round(size_ins / 1024 / 1024, 2), "MB\n"))
+cat(paste("lauree.parquet       :", round(size_lau / 1024 / 1024, 2), "MB\n"))
+cat(paste("filtri.json          : OK\n"))
+cat("\nFile pronti per il deploy su Netlify!\n")
