@@ -1,0 +1,2980 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyUniversity — Ricerca Insegnamenti [TEST]</title>
+
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
+
+    header {
+      background: #c8102e;
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    header span { font-size: 0.9rem; opacity: 0.85; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── TAB NAVIGATION ── */
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #c8102e;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      border: none;
+      background: #eee;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px 8px 0 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.attivo { background: #c8102e; color: white; }
+    .tab-btn:hover:not(.attivo) { background: #ddd; }
+
+    .tab-content { display: none; }
+    .tab-content.attivo { display: block; }
+
+    /* ── FILTRI ── */
+    .filtri {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .filtri h2 { font-size: 1rem; color: #c8102e; margin-bottom: 16px; }
+
+    .filtri-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .filtro-gruppo label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .filtro-gruppo select,
+    .filtro-gruppo input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #fafafa;
+    }
+    .filtro-gruppo select:focus,
+    .filtro-gruppo input[type="text"]:focus {
+      outline: none;
+      border-color: #c8102e;
+      background: white;
+    }
+
+    .choices__inner {
+      background: #fafafa !important;
+      border: 1px solid #ddd !important;
+      border-radius: 6px !important;
+      min-height: 38px !important;
+      font-size: 0.85rem !important;
+      padding: 4px 8px !important;
+    }
+    .choices__inner:focus-within { border-color: #c8102e !important; background: white !important; }
+    .choices__list--dropdown { border-color: #c8102e !important; font-size: 0.85rem !important; }
+    .choices__item--selectable.is-highlighted { background: #fde8ec !important; color: #c8102e !important; }
+    .choices__item.choices__item--choice.is-selected { color: #c8102e; font-weight: 600; }
+    .choices[data-type*="select-multiple"] .choices__inner .choices__item {
+      background: #c8102e !important;
+      border-color: #a50d26 !important;
+      font-size: 0.75rem !important;
+    }
+    .choices__placeholder { color: #aaa !important; font-size: 0.85rem !important; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 9px 22px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    #btn-cerca    { background: #c8102e; color: white; }
+    #btn-reset    { background: #eee; color: #555; }
+    #btn-export   { background: #1a7a4a; color: white; }
+    #btn-cerca:hover  { background: #a50d26; }
+    #btn-reset:hover  { background: #ddd; }
+    #btn-export:hover { background: #155f39; }
+    #btn-export:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* ── STEP 1: checkbox mostra disattivati ── */
+    .filtri-extra {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+    .filtri-extra input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+
+    .risultati {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .risultati-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    #contatore { font-size: 0.9rem; color: #666; }
+    #contatore strong { color: #c8102e; }
+    #status { font-size: 0.85rem; color: #999; font-style: italic; }
+
+    table#tabella { width: 100% !important; font-size: 0.85rem; }
+    table#tabella thead th {
+      background: #f0f0f0;
+      color: #444;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    table#tabella tbody tr:hover { background: #fff8f8; }
+
+    /* Riga modificata */
+    table#tabella tbody tr.riga-modificata { background: #fffbe6 !important; }
+    table#tabella tbody tr.riga-modificata:hover { background: #fff5cc !important; }
+
+    /* STEP 1 – Riga disattivata */
+    table#tabella tbody tr.riga-disattivata { background: #f0f0f0 !important; opacity: 0.65; }
+    table#tabella tbody tr.riga-disattivata:hover { background: #e8e8e8 !important; }
+    table#tabella tbody tr.riga-disattivata td { color: #999 !important; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-triennale   { background: #e3f0ff; color: #1a5fa8; }
+    .badge-magistrale  { background: #fff3e0; color: #e65100; }
+    .badge-ciclo_unico { background: #e8f5e9; color: #2e7d32; }
+
+    /* STEP 1 – badge disattivato */
+    .badge-disattivato {
+      background: #e5e7eb;
+      color: #6b7280;
+      font-size: 0.72rem;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    a.link-ins { color: #c8102e; text-decoration: none; font-size: 0.85rem; }
+    a.link-ins:hover { text-decoration: underline; }
+
+    .btn-piano {
+      background: none;
+      border: 1px solid #c8102e;
+      color: #c8102e;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-piano:hover { background: #fde8ec; }
+
+    .btn-edit {
+      background: none;
+      border: 1px solid #1a7a4a;
+      color: #1a7a4a;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-edit:hover { background: #e6f4ed; }
+
+    /* STEP 1 – pulsante disattiva */
+    .btn-disattiva {
+      background: none;
+      border: 1px solid #9ca3af;
+      color: #6b7280;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-disattiva:hover { background: #f3f4f6; border-color: #6b7280; }
+    .btn-disattiva.attivo-btn { border-color: #c8102e; color: #c8102e; }
+    .btn-disattiva.attivo-btn:hover { background: #fde8ec; }
+
+    .icona-modificata {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 0.8rem;
+    }
+
+    .loading { text-align: center; padding: 40px; color: #999; font-size: 1rem; }
+
+    /* ── MODALE PIANO DI STUDI ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    .modal-overlay.aperto { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+      overflow: hidden;
+      margin: auto;
+    }
+    .modal-header {
+      background: #c8102e;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    .modal-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    .btn-chiudi-modal {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .btn-chiudi-modal:hover { background: rgba(255,255,255,0.4); }
+    .modal-body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+
+    .anno-block { margin-bottom: 24px; }
+    .anno-block h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #c8102e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #fde8ec;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+    .piano-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .piano-table th {
+      background: #f5f5f5;
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+    }
+    .piano-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+    .piano-table tr:hover td { background: #fff8f8; }
+    .piano-table a { color: #c8102e; text-decoration: none; }
+    .piano-table a:hover { text-decoration: underline; }
+    /* STEP 1 – riga disattivata nel piano di studi */
+    .piano-table tr.riga-dis td { background: #f3f4f6 !important; color: #9ca3af !important; }
+
+    .badge-trasv {
+      background: #f3e8ff;
+      color: #6b21a8;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+
+    .cascata-attiva .choices__inner {
+      border-color: #1a7a4a !important;
+      background: #f0fff7 !important;
+    }
+    .cascata-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #d1fae5;
+      color: #065f46;
+      border-radius: 8px;
+      padding: 1px 7px;
+      margin-left: 6px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    /* ── MODALE MODIFICA ── */
+    #modal-edit-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1100;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-edit-overlay.aperto { display: flex; }
+    #modal-edit-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-edit-header {
+      background: #1a7a4a;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-edit-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-edit-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-edit {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    #btn-chiudi-edit:hover { background: rgba(255,255,255,0.4); }
+    #modal-edit-body { padding: 24px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .form-gruppo { display: flex; flex-direction: column; gap: 5px; }
+    .form-gruppo.full { grid-column: 1 / -1; }
+    .form-gruppo label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-gruppo input,
+    .form-gruppo textarea,
+    .form-gruppo select {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fafafa;
+    }
+    .form-gruppo input:focus,
+    .form-gruppo textarea:focus,
+    .form-gruppo select:focus {
+      outline: none;
+      border-color: #1a7a4a;
+      background: white;
+    }
+    .form-gruppo textarea { resize: vertical; min-height: 60px; }
+
+    .edit-info-box {
+      background: #f0fff7;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      color: #065f46;
+    }
+    .edit-info-box strong { color: #065f46; }
+
+    .orig-box {
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .orig-box strong { color: #555; }
+
+    .edit-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    #btn-salva-edit   { background: #1a7a4a; color: white; }
+    #btn-salva-edit:hover { background: #155f39; }
+    #btn-reset-edit   { background: #f97316; color: white; }
+    #btn-reset-edit:hover { background: #ea6500; }
+    #btn-annulla-edit { background: #eee; color: #555; }
+    #btn-annulla-edit:hover { background: #ddd; }
+
+    /* ── STEP 1: MODALE DISATTIVAZIONE ── */
+    #modal-disattiva-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1200;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-disattiva-overlay.aperto { display: flex; }
+    #modal-disattiva-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-disattiva-header {
+      background: #6b7280;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-disattiva-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-disattiva-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-disattiva {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    #btn-chiudi-disattiva:hover { background: rgba(255,255,255,0.4); }
+    #modal-disattiva-body { padding: 24px; }
+
+    .dis-tipo-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .dis-tipo-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .dis-tipo-btn.selezionato { border-color: #6b7280; background: #f3f4f6; color: #111; }
+    .dis-tipo-btn:hover { border-color: #9ca3af; }
+
+    #dis-motivo-row { margin-bottom: 20px; }
+    #dis-motivo-row label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    #dis-motivo {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fafafa;
+    }
+    #dis-motivo:focus { outline: none; border-color: #6b7280; background: white; }
+    .dis-info {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .dis-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    #btn-conferma-disattiva { background: #6b7280; color: white; }
+    #btn-conferma-disattiva:hover { background: #4b5563; }
+    #btn-riattiva { background: #c8102e; color: white; display: none; }
+    #btn-riattiva:hover { background: #a50d26; }
+    #btn-annulla-disattiva { background: #eee; color: #555; }
+    #btn-annulla-disattiva:hover { background: #ddd; }
+
+    /* ── STEP 2: MODALE AGGIUNGI INSEGNAMENTO ── */
+    #modal-aggiungi-ins-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1200;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-aggiungi-ins-overlay.aperto { display: flex; }
+    #modal-aggiungi-ins-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-aggiungi-ins-header {
+      background: #1e40af;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-aggiungi-ins-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-aggiungi-ins-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-aggiungi-ins {
+      background: rgba(255,255,255,0.25); color: white; border: none;
+      border-radius: 6px; padding: 6px 12px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+    }
+    #btn-chiudi-aggiungi-ins:hover { background: rgba(255,255,255,0.4); }
+    #modal-aggiungi-ins-body { padding: 24px; }
+    #btn-salva-aggiungi-ins { background: #1e40af; color: white; }
+    #btn-salva-aggiungi-ins:hover { background: #1e3a8a; }
+    #btn-annulla-aggiungi-ins { background: #eee; color: #555; }
+    #btn-annulla-aggiungi-ins:hover { background: #ddd; }
+
+    /* ── STEP 3: MODALE AGGIUNGI CORSO ── */
+    #modal-aggiungi-corso-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1200;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-aggiungi-corso-overlay.aperto { display: flex; }
+    #modal-aggiungi-corso-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 720px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-aggiungi-corso-header {
+      background: #7c3aed;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-aggiungi-corso-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-aggiungi-corso-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-aggiungi-corso {
+      background: rgba(255,255,255,0.25); color: white; border: none;
+      border-radius: 6px; padding: 6px 12px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+    }
+    #btn-chiudi-aggiungi-corso:hover { background: rgba(255,255,255,0.4); }
+    #modal-aggiungi-corso-body { padding: 24px; }
+    #btn-salva-aggiungi-corso { background: #7c3aed; color: white; }
+    #btn-salva-aggiungi-corso:hover { background: #6d28d9; }
+    #btn-annulla-aggiungi-corso { background: #eee; color: #555; }
+    #btn-annulla-aggiungi-corso:hover { background: #ddd; }
+
+    /* autocomplete datalist */
+    input[list] { position: relative; }
+
+    /* ── STEP 4: MODALE EXPORT/IMPORT ── */
+    #modal-delta-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1200;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    #modal-delta-overlay.aperto { display: flex; }
+    #modal-delta-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 620px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    #modal-delta-header {
+      background: #0f766e;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    #modal-delta-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+    #modal-delta-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+    #btn-chiudi-delta {
+      background: rgba(255,255,255,0.25); color: white; border: none;
+      border-radius: 6px; padding: 6px 12px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+    }
+    #btn-chiudi-delta:hover { background: rgba(255,255,255,0.4); }
+    #modal-delta-body { padding: 24px; }
+
+    .delta-section {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .delta-section h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .delta-stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .delta-stat-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      color: #374151;
+      text-align: center;
+    }
+    .delta-stat-item strong { display: block; font-size: 1.1rem; color: #0f766e; }
+    #delta-promotore {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    #delta-promotore:focus { outline: none; border-color: #0f766e; }
+    .delta-drop-zone {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 12px;
+    }
+    .delta-drop-zone:hover, .delta-drop-zone.drag-over {
+      border-color: #0f766e;
+      background: #f0fdfa;
+      color: #0f766e;
+    }
+    #delta-file-input { display: none; }
+    #delta-import-preview {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: #134e4a;
+      display: none;
+      margin-bottom: 12px;
+    }
+    .delta-btn-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    #btn-esporta-delta { background: #0f766e; color: white; }
+    #btn-esporta-delta:hover { background: #0d6460; }
+    #btn-importa-delta { background: #1e40af; color: white; display: none; }
+    #btn-importa-delta:hover { background: #1e3a8a; }
+    #btn-chiudi-delta-btn { background: #eee; color: #555; }
+    #btn-chiudi-delta-btn:hover { background: #ddd; }
+
+    /* ── VISTA ATENEO ── */
+    #vista-ateneo {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .va-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .va-header h2 { font-size: 1rem; color: #c8102e; }
+    #va-search {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      width: 280px;
+    }
+    #va-search:focus { outline: none; border-color: #c8102e; }
+
+    .tree { font-size: 0.88rem; }
+    .tree-node { margin: 0; }
+
+    /* Livello 1: Ateneo */
+    .tree-ateneo {
+      border: 1px solid #f0d0d5;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .tree-ateneo-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      background: #fde8ec;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      color: #c8102e;
+      font-size: 0.9rem;
+    }
+    .tree-ateneo-header:hover { background: #fcd4db; }
+    .tree-ateneo-header .freccia { font-size: 0.75rem; transition: transform 0.2s; }
+    .tree-ateneo-header .badge-stat {
+      margin-left: auto;
+      background: #c8102e;
+      color: white;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .tree-ateneo-children { display: none; padding: 0 0 8px 0; }
+    .tree-ateneo.aperto > .tree-ateneo-children { display: block; }
+    .tree-ateneo.aperto > .tree-ateneo-header .freccia { transform: rotate(90deg); }
+
+    /* Livello 2: Classe */
+    .tree-classe {
+      margin: 6px 16px 0 16px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .tree-classe-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      color: #444;
+      font-size: 0.84rem;
+    }
+    .tree-classe-header:hover { background: #eeeeee; }
+    .tree-classe-header .freccia { font-size: 0.72rem; transition: transform 0.2s; color: #888; }
+    .tree-classe-header .badge-stat-classe {
+      margin-left: auto;
+      background: #444;
+      color: white;
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .tree-classe-children { display: none; padding: 4px 0; }
+    .tree-classe.aperto > .tree-classe-children { display: block; }
+    .tree-classe.aperto > .tree-classe-header .freccia { transform: rotate(90deg); }
+
+    /* Livello 3: Corso */
+    .tree-corso {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px 7px 28px;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 0.82rem;
+      color: #555;
+      cursor: pointer;
+    }
+    .tree-corso:hover { background: #fff8f8; color: #c8102e; }
+    .tree-corso:last-child { border-bottom: none; }
+    .tree-corso .badge-tipo {
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .tree-corso .stat-corso {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #999;
+      white-space: nowrap;
+    }
+    .tree-corso:hover .stat-corso { color: #c8102e; }
+    /* STEP 1 – corso disattivato nell'albero */
+    .tree-corso.corso-disattivato { opacity: 0.5; }
+    .tree-corso.corso-disattivato:hover { background: #f9fafb; }
+
+    #va-status { font-size: 0.85rem; color: #999; font-style: italic; }
+    #va-contatore { font-size: 0.85rem; color: #666; }
+
+    /* ── BARRA AZIONI CATALOGO ── */
+    .catalogo-bar {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .catalogo-bar span {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 4px;
+    }
+    #btn-aggiungi-ins    { background: #1e40af; color: white; padding: 8px 16px; font-size: 0.85rem; }
+    #btn-aggiungi-ins:hover { background: #1e3a8a; }
+    #btn-aggiungi-corso  { background: #7c3aed; color: white; padding: 8px 16px; font-size: 0.85rem; }
+    #btn-aggiungi-corso:hover { background: #6d28d9; }
+    #btn-gestisci-delta  { background: #0f766e; color: white; padding: 8px 16px; font-size: 0.85rem; }
+    #btn-gestisci-delta:hover { background: #0d6460; }
+
+    /* riga aggiunta ZAN- */
+    table#tabella tbody tr.riga-aggiunta { background: #eff6ff !important; }
+    table#tabella tbody tr.riga-aggiunta:hover { background: #dbeafe !important; }
+
+    /* STEP 4 – badge in header */
+    .delta-badge-header {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.2); border-radius: 20px;
+      padding: 3px 10px; font-size: 0.78rem; font-weight: 600;
+      margin-left: 12px; vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1>🎓 MyUniversity — Ricerca Insegnamenti</h1>
+      <span>Anno accademico 2022/2023 · Fonte: MUR · Zanichelli uso interno</span>
+    </div>
+    <span id="header-delta-badge" class="delta-badge-header" style="display:none" title="Modifiche locali presenti"></span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── TAB NAVIGATION ── -->
+  <div class="tab-nav">
+    <button class="tab-btn attivo" data-tab="tab-ricerca">🔍 Ricerca Insegnamenti</button>
+    <button class="tab-btn" data-tab="tab-ateneo">🏛️ Vista Ateneo</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       BARRA AZIONI CATALOGO (comune a tutte le tab)
+  ══════════════════════════════════════════════ -->
+  <div class="catalogo-bar">
+    <span>📦 Catalogo:</span>
+    <button id="btn-aggiungi-ins"   title="Aggiungi un nuovo insegnamento a un corso esistente">➕ Nuovo insegnamento</button>
+    <button id="btn-aggiungi-corso" title="Aggiungi un nuovo corso di laurea">🎓 Nuovo corso di laurea</button>
+    <button id="btn-gestisci-delta" title="Esporta o importa tutte le modifiche locali">📤 Export / Import delta</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 1: RICERCA INSEGNAMENTI
+  ══════════════════════════════════════════════ -->
+  <div id="tab-ricerca" class="tab-content attivo">
+
+    <div class="filtri">
+      <h2>🔍 Filtri di ricerca</h2>
+      <div class="filtri-grid">
+
+        <div class="filtro-gruppo">
+          <label>Cerca insegnamento</label>
+          <input type="text" id="f-insegnamento"
+                 placeholder="es. biochimica, chimica biologica...">
+          <small style="color:#999;font-size:0.72rem;margin-top:4px;display:block;line-height:1.4">
+            Spazio = AND &nbsp;·&nbsp; Virgola = OR<br>
+            es: <em>biochimica molecolare, chimica biologica</em>
+          </small>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Area SSD</label>
+          <select id="f-area" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Codice SSD</label>
+          <select id="f-ssd" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Zona geografica</label>
+          <select id="f-zona" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Regione</label>
+          <select id="f-regione" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Ateneo</label>
+          <select id="f-ateneo" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Tipologia corso</label>
+          <select id="f-tipologia" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>
+            Classe di laurea
+            <span id="cascata-badge" class="cascata-badge" style="display:none">filtrata per SSD</span>
+          </label>
+          <select id="f-classe" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Anno di corso</label>
+          <select id="f-anno" multiple>
+            <option value="1">1° anno</option>
+            <option value="2">2° anno</option>
+            <option value="3">3° anno</option>
+            <option value="4">4° anno</option>
+            <option value="5">5° anno</option>
+            <option value="6">6° anno</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- STEP 1 – checkbox mostra disattivati -->
+      <div class="filtri-extra">
+        <input type="checkbox" id="chk-mostra-disattivati">
+        <label for="chk-mostra-disattivati" style="font-size:0.85rem;font-weight:500;color:#555;text-transform:none;letter-spacing:0;">
+          👁 Mostra insegnamenti/corsi disattivati
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button id="btn-cerca">🔍 Cerca</button>
+        <button id="btn-reset">↺ Reset</button>
+        <button id="btn-export" disabled>⬇ Esporta CSV</button>
+      </div>
+    </div>
+
+    <div class="risultati">
+      <div class="risultati-header">
+        <div id="contatore">Inserisci i filtri e premi Cerca</div>
+        <div id="status">Caricamento dati in corso...</div>
+      </div>
+      <div id="tabella-container">
+        <div class="loading">⏳ Inizializzazione motore di ricerca...</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-ricerca -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2: VISTA ATENEO
+  ══════════════════════════════════════════════ -->
+  <div id="tab-ateneo" class="tab-content">
+    <div id="vista-ateneo">
+      <div class="va-header">
+        <div>
+          <h2>🏛️ Vista Ateneo — Struttura ad albero</h2>
+          <span id="va-contatore"></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span id="va-status">In attesa...</span>
+          <input type="text" id="va-search" placeholder="🔍 Filtra ateneo o corso...">
+        </div>
+      </div>
+      <div id="va-tree-container">
+        <div class="loading">⏳ Carica i dati dalla tab Ricerca...</div>
+      </div>
+    </div>
+  </div><!-- /tab-ateneo -->
+
+</div><!-- /container -->
+
+<!-- ══════════════════════════════════════════════
+     MODALE PIANO DI STUDI
+══════════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay">
+  <div id="modal-box" class="modal-box">
+    <div id="modal-header" class="modal-header">
+      <div>
+        <h3 id="modal-titolo">Piano di studi</h3>
+        <p id="modal-sottotitolo"></p>
+      </div>
+      <button class="btn-chiudi-modal" id="btn-chiudi-modal">✕ Chiudi</button>
+    </div>
+    <div id="modal-body" class="modal-body">
+      <div class="loading">Caricamento piano di studi...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODALE MODIFICA INSEGNAMENTO (originale)
+══════════════════════════════════════════════ -->
+<div id="modal-edit-overlay">
+  <div id="modal-edit-box">
+    <div id="modal-edit-header">
+      <div>
+        <h3>✏️ Modifica insegnamento</h3>
+        <p id="edit-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-edit">✕ Chiudi</button>
+    </div>
+    <div id="modal-edit-body">
+
+      <div class="edit-info-box">
+        ℹ️ Le modifiche vengono salvate <strong>in locale</strong> (localStorage).
+        Il record originale MUR 2022/23 rimane intatto come riferimento.
+        Le righe modificate vengono evidenziate con 🔄 nella tabella.
+      </div>
+
+      <div class="orig-box" id="edit-orig-box">
+        <strong>Record originale MUR:</strong>
+        <span id="edit-orig-text"></span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-gruppo full">
+          <label>Nome insegnamento</label>
+          <input type="text" id="edit-insegnamento">
+        </div>
+        <div class="form-gruppo">
+          <label>SSD</label>
+          <input type="text" id="edit-ssd">
+        </div>
+        <div class="form-gruppo">
+          <label>CFU</label>
+          <input type="number" id="edit-cfu" min="0" max="60">
+        </div>
+        <div class="form-gruppo">
+          <label>Anno di corso</label>
+          <select id="edit-anno">
+            <option value="1">1° anno</option>
+            <option value="2">2° anno</option>
+            <option value="3">3° anno</option>
+            <option value="4">4° anno</option>
+            <option value="5">5° anno</option>
+            <option value="6">6° anno</option>
+          </select>
+        </div>
+        <div class="form-gruppo">
+          <label>Anno accademico aggiornamento</label>
+          <input type="text" id="edit-aa" readonly
+                 style="background:#f0f0f0;color:#888;cursor:not-allowed">
+        </div>
+        <div class="form-gruppo">
+          <label>Data aggiornamento</label>
+          <input type="text" id="edit-data" readonly
+                 style="background:#f0f0f0;color:#888;cursor:not-allowed">
+        </div>
+        <div class="form-gruppo full">
+          <label>URL insegnamento (aggiornabile)</label>
+          <input type="url" id="edit-url" placeholder="https://...">
+        </div>
+        <div class="form-gruppo full">
+          <label>Note aggiuntive</label>
+          <textarea id="edit-note" placeholder="Inserisci note o commenti..."></textarea>
+        </div>
+      </div>
+
+      <div class="edit-btn-row">
+        <button id="btn-reset-edit">🗑️ Rimuovi modifiche</button>
+        <button id="btn-annulla-edit">Annulla</button>
+        <button id="btn-salva-edit">💾 Salva modifiche</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 1 — MODALE DISATTIVAZIONE
+══════════════════════════════════════════════ -->
+<div id="modal-disattiva-overlay">
+  <div id="modal-disattiva-box">
+    <div id="modal-disattiva-header">
+      <div>
+        <h3 id="dis-titolo">⛔ Disattiva elemento</h3>
+        <p id="dis-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-disattiva">✕ Chiudi</button>
+    </div>
+    <div id="modal-disattiva-body">
+
+      <div class="dis-info" id="dis-info-box">
+        L'elemento verrà marcato come non più attivo e apparirà in grigio.
+        Sarà escluso dai risultati per default (visibile solo con "Mostra disattivati").
+      </div>
+
+      <!-- Tipo disattivazione (solo per insegnamenti) -->
+      <div id="dis-tipo-section" style="margin-bottom:16px;">
+        <div style="font-size:0.75rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Cosa disattivare</div>
+        <div class="dis-tipo-row">
+          <button class="dis-tipo-btn selezionato" data-tipo="insegnamento">📚 Solo questo insegnamento</button>
+          <button class="dis-tipo-btn" data-tipo="corso">🎓 Tutto il corso di laurea</button>
+        </div>
+      </div>
+
+      <div id="dis-motivo-row">
+        <label>Motivo disattivazione</label>
+        <select id="dis-motivo-preset" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;background:#fafafa;margin-bottom:8px;">
+          <option value="">— Seleziona motivo —</option>
+          <option value="Ad esaurimento">Ad esaurimento</option>
+          <option value="Soppresso">Soppresso</option>
+          <option value="Fusione con altro corso">Fusione con altro corso</option>
+          <option value="Trasformato in altro corso">Trasformato in altro corso</option>
+          <option value="SSD modificato">SSD modificato</option>
+          <option value="Altro">Altro (specifica sotto)</option>
+        </select>
+        <input type="text" id="dis-motivo" placeholder="Note aggiuntive opzionali...">
+      </div>
+
+      <div class="dis-btn-row">
+        <button id="btn-riattiva">✅ Riattiva</button>
+        <button id="btn-annulla-disattiva">Annulla</button>
+        <button id="btn-conferma-disattiva">⛔ Conferma disattivazione</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 2 — MODALE AGGIUNGI INSEGNAMENTO
+══════════════════════════════════════════════ -->
+<div id="modal-aggiungi-ins-overlay">
+  <div id="modal-aggiungi-ins-box">
+    <div id="modal-aggiungi-ins-header">
+      <div>
+        <h3>➕ Aggiungi nuovo insegnamento</h3>
+        <p>A un corso di laurea già presente nel catalogo</p>
+      </div>
+      <button id="btn-chiudi-aggiungi-ins">✕ Chiudi</button>
+    </div>
+    <div id="modal-aggiungi-ins-body">
+
+      <div class="edit-info-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;">
+        ℹ️ Il nuovo insegnamento riceverà un ID con prefisso <strong>ZAN-</strong> per distinguerlo
+        dai dati MUR 2022/23. Verrà salvato in localStorage e incluso nell'export delta.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-gruppo full">
+          <label>Ateneo *</label>
+          <input type="text" id="ai-ateneo" list="ai-ateneo-list" placeholder="Digita per cercare..." autocomplete="off">
+          <datalist id="ai-ateneo-list"></datalist>
+        </div>
+        <div class="form-gruppo full">
+          <label>Corso di laurea *</label>
+          <input type="text" id="ai-laurea" list="ai-laurea-list" placeholder="Digita per cercare..." autocomplete="off">
+          <datalist id="ai-laurea-list"></datalist>
+        </div>
+        <div class="form-gruppo full">
+          <label>Nome insegnamento *</label>
+          <input type="text" id="ai-insegnamento" placeholder="es. Biochimica applicata">
+        </div>
+        <div class="form-gruppo">
+          <label>SSD</label>
+          <input type="text" id="ai-ssd" placeholder="es. BIO/10">
+        </div>
+        <div class="form-gruppo">
+          <label>CFU</label>
+          <input type="number" id="ai-cfu" min="1" max="60" placeholder="6">
+        </div>
+        <div class="form-gruppo">
+          <label>Anno di corso</label>
+          <select id="ai-anno">
+            <option value="1">1° anno</option>
+            <option value="2">2° anno</option>
+            <option value="3">3° anno</option>
+            <option value="4">4° anno</option>
+            <option value="5">5° anno</option>
+            <option value="6">6° anno</option>
+          </select>
+        </div>
+        <div class="form-gruppo">
+          <label>Anno accademico di riferimento</label>
+          <input type="text" id="ai-aa" placeholder="es. 2024/25">
+        </div>
+        <div class="form-gruppo full">
+          <label>URL insegnamento</label>
+          <input type="url" id="ai-url" placeholder="https://...">
+        </div>
+        <div class="form-gruppo full">
+          <label>Note</label>
+          <textarea id="ai-note" placeholder="Note aggiuntive..."></textarea>
+        </div>
+      </div>
+
+      <div class="edit-btn-row">
+        <button id="btn-annulla-aggiungi-ins">Annulla</button>
+        <button id="btn-salva-aggiungi-ins">➕ Aggiungi insegnamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 3 — MODALE AGGIUNGI CORSO DI LAUREA
+══════════════════════════════════════════════ -->
+<div id="modal-aggiungi-corso-overlay">
+  <div id="modal-aggiungi-corso-box">
+    <div id="modal-aggiungi-corso-header">
+      <div>
+        <h3>🎓 Aggiungi nuovo corso di laurea</h3>
+        <p>Corso non presente nel catalogo MUR 2022/23</p>
+      </div>
+      <button id="btn-chiudi-aggiungi-corso">✕ Chiudi</button>
+    </div>
+    <div id="modal-aggiungi-corso-body">
+
+      <div class="edit-info-box" style="background:#faf5ff;border-color:#e9d5ff;color:#7c3aed;">
+        ℹ️ Il nuovo corso verrà salvato in localStorage. Puoi poi aggiungere insegnamenti
+        tramite "Nuovo insegnamento". Ateneo e classe di laurea vengono suggeriti dall'autocomplete.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-gruppo full">
+          <label>Ateneo *</label>
+          <input type="text" id="ac-ateneo" list="ac-ateneo-list" placeholder="Digita per cercare..." autocomplete="off">
+          <datalist id="ac-ateneo-list"></datalist>
+        </div>
+        <div class="form-gruppo full">
+          <label>Nome corso di laurea *</label>
+          <input type="text" id="ac-laurea" placeholder="es. Laurea in Biotecnologie Industriali">
+        </div>
+        <div class="form-gruppo">
+          <label>Classe di laurea *</label>
+          <input type="text" id="ac-classe" list="ac-classe-list" placeholder="Digita per cercare..." autocomplete="off">
+          <datalist id="ac-classe-list"></datalist>
+        </div>
+        <div class="form-gruppo">
+          <label>Tipologia *</label>
+          <select id="ac-tipologia">
+            <option value="triennale">Triennale</option>
+            <option value="magistrale">Magistrale</option>
+            <option value="ciclo unico">Ciclo unico</option>
+          </select>
+        </div>
+        <div class="form-gruppo">
+          <label>Regione</label>
+          <input type="text" id="ac-regione" readonly style="background:#f0f0f0;color:#888;">
+        </div>
+        <div class="form-gruppo">
+          <label>Zona geografica</label>
+          <input type="text" id="ac-zona" readonly style="background:#f0f0f0;color:#888;">
+        </div>
+        <div class="form-gruppo">
+          <label>Durata (anni)</label>
+          <input type="number" id="ac-durata" min="1" max="6" placeholder="3">
+        </div>
+        <div class="form-gruppo">
+          <label>Anno accademico attivazione</label>
+          <input type="text" id="ac-aa" placeholder="es. 2024/25">
+        </div>
+        <div class="form-gruppo full">
+          <label>Note</label>
+          <textarea id="ac-note" placeholder="Note aggiuntive..."></textarea>
+        </div>
+      </div>
+
+      <div class="edit-btn-row">
+        <button id="btn-annulla-aggiungi-corso">Annulla</button>
+        <button id="btn-salva-aggiungi-corso">🎓 Aggiungi corso</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STEP 4 — MODALE EXPORT / IMPORT DELTA
+══════════════════════════════════════════════ -->
+<div id="modal-delta-overlay">
+  <div id="modal-delta-box">
+    <div id="modal-delta-header">
+      <div>
+        <h3>📤 Export / Import Delta</h3>
+        <p>Condivisione modifiche tra promotori Zanichelli</p>
+      </div>
+      <button id="btn-chiudi-delta">✕ Chiudi</button>
+    </div>
+    <div id="modal-delta-body">
+
+      <!-- EXPORT SECTION -->
+      <div class="delta-section">
+        <h4>📤 Esporta le tue modifiche</h4>
+        <div class="delta-stats" id="delta-stats-export"></div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;display:block;margin-bottom:6px;">
+            Il tuo nome (promotore)
+          </label>
+          <input type="text" id="delta-promotore" placeholder="es. Mario Rossi — Zona Nord-Est">
+        </div>
+        <button id="btn-esporta-delta" style="width:100%;padding:10px;">📥 Scarica file delta JSON</button>
+      </div>
+
+      <!-- IMPORT SECTION -->
+      <div class="delta-section">
+        <h4>📥 Importa modifiche da un collega</h4>
+        <div class="delta-drop-zone" id="delta-drop-zone">
+          <div style="font-size:1.5rem;margin-bottom:8px;">📂</div>
+          Trascina qui il file JSON oppure <strong>clicca per sfogliare</strong>
+        </div>
+        <input type="file" id="delta-file-input" accept=".json">
+        <div id="delta-import-preview"></div>
+        <div class="delta-btn-row">
+          <button id="btn-chiudi-delta-btn">Chiudi</button>
+          <button id="btn-importa-delta">📥 Importa delta</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- datalists per autocomplete -->
+<datalist id="ac-ateneo-list"></datalist>
+<datalist id="ac-classe-list"></datalist>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script type="module">
+  import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
+
+  // ══════════════════════════════════════════════════════════
+  // STATO GLOBALE
+  // ══════════════════════════════════════════════════════════
+  let db, conn;
+  let ultimiRisultati = [];
+  let choicesMap = {};
+  let lookupClassi = {};
+  let alberoCompleto = [];
+
+  // ── Chiavi localStorage ────────────────────────────────────
+  const LS_KEY          = 'myuniversity_modifiche_v1';
+  const LS_KEY_DISATT   = 'myuniversity_disattivazioni_v1';
+  const LS_KEY_AGG_INS  = 'myuniversity_aggiunte_ins_v1';
+  const LS_KEY_AGG_CRS  = 'myuniversity_aggiunte_corsi_v1';
+
+  // ── Record correnti nei modali ─────────────────────────────
+  let editRecordCorrente    = null;
+  let disattivaRecordCorrente = null;
+  let tipoDisattivazione    = 'insegnamento'; // 'insegnamento' | 'corso'
+  let deltaImportPending    = null;           // oggetto JSON da importare
+
+  // Cache ateneo → { regione, zona } per autocomplete Step 3
+  let cacheAteneoDati = {};
+
+  // ══════════════════════════════════════════════════════════
+  // HELPERS LOCALSTORAGE
+  // ══════════════════════════════════════════════════════════
+  function leggiLS(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e) { return fallback; }
+  }
+  const leggiModifiche    = () => leggiLS(LS_KEY, {});
+  const leggiDisattivazioni = () => leggiLS(LS_KEY_DISATT, {});
+  const leggiAggungeIns   = () => leggiLS(LS_KEY_AGG_INS, []);
+  const leggiAggiungeCorsi = () => leggiLS(LS_KEY_AGG_CRS, []);
+
+  function salvaLS(key, obj) { localStorage.setItem(key, JSON.stringify(obj)); }
+  const salvaModifiche      = obj => salvaLS(LS_KEY, obj);
+  const salvaDisattivazioni = obj => salvaLS(LS_KEY_DISATT, obj);
+  const salvaAggiungeIns    = arr => salvaLS(LS_KEY_AGG_INS, arr);
+  const salvaAggiungeCorsi  = arr => salvaLS(LS_KEY_AGG_CRS, arr);
+
+  function chiaveRecord(row) {
+    return [row.ateneo, row.laurea, row.insegnamento, row.anno_ins]
+      .map(s => (s||'').trim()).join('||');
+  }
+  function chiaveCorso(ateneo, laurea) {
+    return `${(ateneo||'').trim()}||${(laurea||'').trim()}`;
+  }
+
+  function annoAccademicoCorrente() {
+    const oggi = new Date();
+    const anno = oggi.getMonth() >= 8 ? oggi.getFullYear() : oggi.getFullYear() - 1;
+    return `${anno}/${String(anno+1).slice(-2)}`;
+  }
+  function dataOggi() {
+    const d = new Date(), pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function idZan() { return 'ZAN-' + Date.now(); }
+
+  // ── Aggiorna badge header ──────────────────────────────────
+  function aggiornaBadgeHeader() {
+    const mods  = Object.keys(leggiModifiche()).length;
+    const dis   = Object.keys(leggiDisattivazioni()).length;
+    const ins   = leggiAggungeIns().length;
+    const corsi = leggiAggiungeCorsi().length;
+    const tot   = mods + dis + ins + corsi;
+    const el    = document.getElementById('header-delta-badge');
+    if (tot > 0) {
+      el.style.display = 'inline-flex';
+      el.textContent = `🔄 ${tot} modifica${tot>1?'he':''} locale${tot>1?'i':''}`;
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // APPLICA MODIFICHE / DISATTIVAZIONI / AGGIUNTE A ROWS
+  // ══════════════════════════════════════════════════════════
+  function applicaModifiche(rows) {
+    const mods = leggiModifiche();
+    const dis  = leggiDisattivazioni();
+    return rows.map(row => {
+      const k = chiaveRecord(row);
+      const kc = chiaveCorso(row.ateneo, row.laurea);
+      let r = { ...row };
+      if (mods[k]) {
+        r = Object.assign({}, r, mods[k], { _modificato: true });
+      }
+      // Disattivazione insegnamento
+      if (dis[k] && dis[k].tipo === 'insegnamento') {
+        r._disattivato = true;
+        r._motivo_dis  = dis[k].motivo;
+      }
+      // Disattivazione corso (prevale su insegnamento)
+      if (dis[kc] && dis[kc].tipo === 'corso') {
+        r._disattivato = true;
+        r._corso_disattivato = true;
+        r._motivo_dis  = dis[kc].motivo;
+      }
+      return r;
+    });
+  }
+
+  function applicaAggiunte(rows) {
+    // Aggiunge i record ZAN- all'array risultati
+    const aggiunte = leggiAggungeIns();
+    return [...rows, ...aggiunte.map(a => ({ ...a, _aggiunto: true }))];
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // INIZIALIZZAZIONE DUCKDB
+  // ══════════════════════════════════════════════════════════
+  async function initDuckDB() {
+    const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+    const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+    const worker_url = URL.createObjectURL(
+      new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
+    );
+    const worker = new Worker(worker_url);
+    const logger = new duckdb.ConsoleLogger();
+    db = new duckdb.AsyncDuckDB(logger, worker);
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    conn = await db.connect();
+    document.getElementById('status').textContent = 'Caricamento CSV...';
+    await caricaCSV();
+  }
+
+  async function caricaCSV() {
+    const [respIns, respLau] = await Promise.all([
+      fetch('insegnamenti.csv'),
+      fetch('lauree.csv')
+    ]);
+    const [csvIns, csvLau] = await Promise.all([respIns.text(), respLau.text()]);
+    await db.registerFileText('insegnamenti.csv', csvIns);
+    await db.registerFileText('lauree.csv', csvLau);
+    await conn.query(`CREATE TABLE insegnamenti AS SELECT * FROM read_csv_auto('insegnamenti.csv', header=true, ignore_errors=true);`);
+    await conn.query(`CREATE TABLE lauree AS SELECT * FROM read_csv_auto('lauree.csv', header=true, ignore_errors=true);`);
+
+    document.getElementById('status').textContent = 'Pronto';
+    document.getElementById('tabella-container').innerHTML =
+      '<table id="tabella" class="display" style="width:100%"></table>';
+
+    await popolaFiltri();
+    inizializzaTabella();
+    inizializzaChoices();
+    document.getElementById('btn-export').disabled = false;
+
+    // Pre-carica cache atenei per autocomplete Step 2/3
+    await caricaCacheAtenei();
+    aggiornaBadgeHeader();
+  }
+
+  // ── Cache atenei per autocomplete ─────────────────────────
+  async function caricaCacheAtenei() {
+    try {
+      const res = await conn.query(
+        `SELECT DISTINCT ateneo, regione, zona FROM insegnamenti WHERE ateneo IS NOT NULL ORDER BY ateneo`
+      );
+      res.toArray().forEach(r => {
+        cacheAteneoDati[String(r.ateneo)] = {
+          regione: String(r.regione || ''),
+          zona:    String(r.zona    || '')
+        };
+      });
+      // Popola datalist atenei (riusato in Step 2 e Step 3)
+      ['ai-ateneo-list', 'ac-ateneo-list'].forEach(listId => {
+        const dl = document.getElementById(listId);
+        if (!dl) return;
+        dl.innerHTML = '';
+        Object.keys(cacheAteneoDati).forEach(nome => {
+          const opt = document.createElement('option'); opt.value = nome; dl.appendChild(opt);
+        });
+      });
+      // Datalist classi per Step 3
+      const resC = await conn.query(
+        `SELECT DISTINCT nome_classe FROM insegnamenti WHERE nome_classe IS NOT NULL ORDER BY nome_classe`
+      );
+      const dlC = document.getElementById('ac-classe-list');
+      if (dlC) {
+        dlC.innerHTML = '';
+        resC.toArray().forEach(r => {
+          const v = String(r.nome_classe || '');
+          if (v && v !== 'null') {
+            const opt = document.createElement('option'); opt.value = v; dlC.appendChild(opt);
+          }
+        });
+      }
+    } catch(e) { console.error('caricaCacheAtenei', e); }
+  }
+
+  // ── Popola datalist lauree dinamicamente per Step 2 ────────
+  async function popolaLaureePerAteneo(nomeAteneo) {
+    if (!conn || !nomeAteneo) return;
+    try {
+      const res = await conn.query(
+        `SELECT DISTINCT laurea FROM insegnamenti WHERE ateneo = '${nomeAteneo.replace(/'/g,"''")}' ORDER BY laurea`
+      );
+      const dl = document.getElementById('ai-laurea-list');
+      dl.innerHTML = '';
+      res.toArray().forEach(r => {
+        const v = String(r.laurea || '');
+        if (v && v !== 'null') {
+          const opt = document.createElement('option'); opt.value = v; dl.appendChild(opt);
+        }
+      });
+      // Aggiungi anche i corsi ZAN- per quell'ateneo
+      leggiAggiungeCorsi().filter(c => c.ateneo === nomeAteneo).forEach(c => {
+        const opt = document.createElement('option'); opt.value = c.laurea; dl.appendChild(opt);
+      });
+    } catch(e) { console.error('popolaLaureePerAteneo', e); }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // CHOICES.JS
+  // ══════════════════════════════════════════════════════════
+  function inizializzaChoices() {
+    const ids = ['f-area','f-ssd','f-zona','f-regione','f-ateneo','f-tipologia','f-classe','f-anno'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      choicesMap[id] = new Choices(el, {
+        removeItemButton: true, searchEnabled: true,
+        searchPlaceholderValue: 'Cerca...', itemSelectText: '',
+        noResultsText: 'Nessun risultato', noChoicesText: 'Nessuna opzione disponibile',
+        placeholder: true, placeholderValue: '— Tutti —', shouldSort: false,
+      });
+    });
+    document.getElementById('f-ssd').addEventListener('addItem', aggiornaCascataClassi);
+    document.getElementById('f-ssd').addEventListener('removeItem', aggiornaCascataClassi);
+    document.getElementById('f-area').addEventListener('addItem', aggiornaCascataClassi);
+    document.getElementById('f-area').addEventListener('removeItem', aggiornaCascataClassi);
+    document.getElementById('f-tipologia').addEventListener('addItem', aggiornaCascataClassi);
+    document.getElementById('f-tipologia').addEventListener('removeItem', aggiornaCascataClassi);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // POPOLA FILTRI / CASCATA CLASSI
+  // ══════════════════════════════════════════════════════════
+  async function popolaFiltri() {
+    try {
+      const rispLookup = await fetch('classi_lookup.json');
+      lookupClassi = await rispLookup.json();
+    } catch(e) { lookupClassi = {}; }
+
+    const fill = async (selectId, col, tabella) => {
+      const res = await conn.query(`SELECT DISTINCT ${col} FROM ${tabella} WHERE ${col} IS NOT NULL ORDER BY ${col}`);
+      const sel = document.getElementById(selectId);
+      res.toArray().forEach(r => {
+        const v = String(Object.values(r)[0]);
+        if (v && v !== 'null') {
+          const opt = document.createElement('option'); opt.value = v; opt.textContent = v; sel.appendChild(opt);
+        }
+      });
+    };
+
+    const aree = await conn.query(`SELECT DISTINCT regexp_extract(ssd, '^([A-Z]+)/', 1) AS area FROM insegnamenti WHERE ssd IS NOT NULL AND ssd != '' ORDER BY area`);
+    const selArea = document.getElementById('f-area');
+    aree.toArray().forEach(r => {
+      const v = String(r.area);
+      if (v && v !== 'null' && v !== '') {
+        const opt = document.createElement('option'); opt.value = v; opt.textContent = v; selArea.appendChild(opt);
+      }
+    });
+
+    const ssdCodici = await conn.query(`SELECT DISTINCT regexp_extract(ssd, '^([^ ]+)', 1) AS codice FROM insegnamenti WHERE ssd IS NOT NULL AND ssd != '' ORDER BY codice`);
+    const selSsd = document.getElementById('f-ssd');
+    ssdCodici.toArray().forEach(r => {
+      const v = String(r.codice);
+      if (v && v !== 'null' && v !== '') {
+        const opt = document.createElement('option'); opt.value = v; opt.textContent = v; selSsd.appendChild(opt);
+      }
+    });
+
+    await fill('f-zona',      'zona',      'insegnamenti');
+    await fill('f-regione',   'regione',   'insegnamenti');
+    await fill('f-ateneo',    'ateneo',    'insegnamenti');
+    await fill('f-tipologia', 'tipologia', 'insegnamenti');
+    await popolaClassi(null);
+  }
+
+  async function popolaClassi(filtroSsd, filtroTipologia = []) {
+    const conditions = [];
+    if (filtroSsd && filtroSsd.length > 0) {
+      const listaSsd = filtroSsd.map(s => `'${s.replace(/'/g,"''")}'`).join(',');
+      conditions.push(`regexp_extract(ssd, '^([^ ]+)', 1) IN (${listaSsd})`);
+    }
+    if (filtroTipologia && filtroTipologia.length > 0) {
+      const listaTip = filtroTipologia.map(t => `'${t.replace(/'/g,"''")}'`).join(',');
+      conditions.push(`tipologia IN (${listaTip})`);
+    }
+    const whereClause = conditions.length > 0
+      ? `WHERE nome_classe IS NOT NULL AND ${conditions.join(' AND ')}`
+      : `WHERE nome_classe IS NOT NULL`;
+    const classiRes = await conn.query(`SELECT DISTINCT nome_classe FROM insegnamenti ${whereClause}`);
+
+    function ordinaCodice(codice) {
+      if (!codice) return 'ZZZ';
+      const prefissi = {'L-':'1','L/':'2','LM-':'3','LM/':'4','LMG':'5','LMR':'6'};
+      let prefisso = '9';
+      for (const [p, v] of Object.entries(prefissi)) { if (codice.startsWith(p)) { prefisso = v; break; } }
+      const num = parseInt(codice.replace(/[^0-9]/g, '')) || 999;
+      return prefisso + String(num).padStart(4, '0');
+    }
+
+    const voci = [];
+    classiRes.toArray().forEach(r => {
+      const nome = String(r.nome_classe);
+      if (nome && nome !== 'null') {
+        const codice = lookupClassi[nome.toLowerCase()] || '';
+        voci.push({ nome, codice, sort: ordinaCodice(codice) });
+      }
+    });
+    voci.sort((a, b) => a.sort.localeCompare(b.sort));
+
+    const ch = choicesMap['f-classe'];
+    if (ch) {
+      ch.clearChoices();
+      ch.setChoices(voci.map(({ nome, codice }) => ({
+        value: nome, label: codice ? `${codice} · ${nome}` : nome,
+      })), 'value', 'label', true);
+    } else {
+      const sel = document.getElementById('f-classe');
+      sel.innerHTML = '';
+      voci.forEach(({ nome, codice }) => {
+        const opt = document.createElement('option');
+        opt.value = nome; opt.textContent = codice ? `${codice} · ${nome}` : nome;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  async function aggiornaCascataClassi() {
+    if (!conn) return;
+    const ssdSel  = choicesMap['f-ssd']       ? choicesMap['f-ssd'].getValue(true)       : [];
+    const areaSel = choicesMap['f-area']       ? choicesMap['f-area'].getValue(true)      : [];
+    const tipSel  = choicesMap['f-tipologia']  ? choicesMap['f-tipologia'].getValue(true) : [];
+
+    let tuttiSsd = [...ssdSel];
+    if (areaSel.length > 0) {
+      const listaAree = areaSel.map(a => `'${a.replace(/'/g,"''")}'`).join(',');
+      const res = await conn.query(`
+        SELECT DISTINCT regexp_extract(ssd, '^([^ ]+)', 1) AS codice
+        FROM insegnamenti
+        WHERE regexp_extract(ssd, '^([A-Z]+)/', 1) IN (${listaAree}) AND ssd IS NOT NULL AND ssd != ''
+      `);
+      res.toArray().forEach(r => {
+        const v = String(r.codice);
+        if (v && v !== 'null' && !tuttiSsd.includes(v)) tuttiSsd.push(v);
+      });
+    }
+
+    const haSelezione = tuttiSsd.length > 0 || tipSel.length > 0;
+    await popolaClassi(tuttiSsd.length > 0 ? tuttiSsd : null, tipSel);
+
+    const badge  = document.getElementById('cascata-badge');
+    const gruppo = document.getElementById('f-classe').closest('.filtro-gruppo');
+    badge.style.display = haSelezione ? 'inline-block' : 'none';
+    badge.textContent = [
+      tuttiSsd.length > 0 ? 'filtrata per SSD' : '',
+      tipSel.length > 0   ? 'filtrata per tipologia' : ''
+    ].filter(Boolean).join(' · ');
+    gruppo.classList.toggle('cascata-attiva', haSelezione);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // BUILD WHERE
+  // ══════════════════════════════════════════════════════════
+  function getVals(id) {
+    const ch = choicesMap[id];
+    if (ch) return ch.getValue(true);
+    const el = document.getElementById(id);
+    return el ? [el.value].filter(Boolean) : [];
+  }
+  function inClause(col, vals) {
+    if (!vals || vals.length === 0) return null;
+    if (vals.length === 1) return `${col} = '${vals[0].replace(/'/g,"''")}'`;
+    return `${col} IN (${vals.map(v => `'${v.replace(/'/g,"''")}'`).join(',')})`;
+  }
+
+  function buildWhere() {
+    const clauses = [];
+    const ins = document.getElementById('f-insegnamento').value.trim();
+    if (ins) {
+      const gruppiOR = ins.split(',').map(g => g.trim()).filter(g => g.length > 0);
+      const clausoleOR = gruppiOR.map(gruppo => {
+        const paroleAND = gruppo.split(/\s+/).map(p => p.trim()).filter(p => p.length > 0);
+        if (paroleAND.length === 1)
+          return `lower(i.insegnamento) LIKE '%${paroleAND[0].toLowerCase().replace(/'/g,"''")}%'`;
+        return '(' + paroleAND.map(p => `lower(i.insegnamento) LIKE '%${p.toLowerCase().replace(/'/g,"''")}%'`).join(' AND ') + ')';
+      });
+      clauses.push(clausoleOR.length === 1 ? clausoleOR[0] : '(' + clausoleOR.join(' OR ') + ')');
+    }
+    const area = getVals('f-area');
+    if (area.length) clauses.push(`regexp_extract(i.ssd, '^([A-Z]+)/', 1) IN (${area.map(a=>`'${a.replace(/'/g,"''")}'`).join(',')})`);
+    const ssd = getVals('f-ssd');
+    if (ssd.length)  clauses.push(`regexp_extract(i.ssd, '^([^ ]+)', 1) IN (${ssd.map(s=>`'${s.replace(/'/g,"''")}'`).join(',')})`);
+    const c1 = inClause('i.zona',       getVals('f-zona'));      if (c1) clauses.push(c1);
+    const c2 = inClause('i.regione',    getVals('f-regione'));   if (c2) clauses.push(c2);
+    const c3 = inClause('i.ateneo',     getVals('f-ateneo'));    if (c3) clauses.push(c3);
+    const c4 = inClause('i.tipologia',  getVals('f-tipologia')); if (c4) clauses.push(c4);
+    const c5 = inClause('i.nome_classe',getVals('f-classe'));    if (c5) clauses.push(c5);
+    const anno = getVals('f-anno');
+    if (anno.length) clauses.push(`i.anno_ins IN (${anno.join(',')})`);
+    return clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // DATATABLES
+  // ══════════════════════════════════════════════════════════
+  let dtTable = null;
+
+  function inizializzaTabella() {
+    dtTable = $('#tabella').DataTable({
+      data: [],
+      columns: [
+        { title: 'Insegnamento', data: 'insegnamento',
+          render: (v, _, row) => {
+            let out = escHtml(v);
+            if (row._modificato)    out += '<span class="icona-modificata" title="Modificato localmente">🔄</span>';
+            if (row._aggiunto)      out += '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af">ZAN</span>';
+            if (row._disattivato)   out += `<span class="badge-disattivato" title="${escHtml(row._motivo_dis||'')}">⛔ non attivo</span>`;
+            return out;
+          }
+        },
+        { title: 'SSD',      data: 'ssd' },
+        { title: 'Ateneo',   data: 'ateneo' },
+        { title: 'Laurea',   data: 'laurea' },
+        { title: 'Tipologia', data: 'tipologia',
+          render: v => `<span class="badge badge-${(v||'').replace(/\s/g,'_')}">${v||''}</span>` },
+        { title: 'A.',  data: 'anno_ins' },
+        { title: 'CFU', data: 'cfu' },
+        { title: 'Curriculum', data: 'n_curriculum',
+          render: (v, _, row) => v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista },
+        { title: 'Link', data: 'url_ins',
+          render: v => v && v !== 'NA' && v !== 'null' && v !== ''
+            ? `<a class="link-ins" href="${v}" target="_blank">🔗</a>` : '' },
+        { title: '📋', data: null, orderable: false,
+          render: (_, __, row) =>
+            `<button class="btn-piano" data-ateneo="${escHtml(row.ateneo)}" data-laurea="${escHtml(row.laurea)}" data-tipo="${escHtml(row.tipologia)}" title="Piano di studi">📋</button>` },
+        { title: '✏️', data: null, orderable: false,
+          render: () => `<button class="btn-edit" title="Modifica">✏️</button>` },
+        { title: '⛔', data: null, orderable: false,
+          render: (_, __, row) => {
+            const cls = row._disattivato ? 'btn-disattiva attivo-btn' : 'btn-disattiva';
+            const label = row._disattivato ? '✅' : '⛔';
+            return `<button class="${cls}" title="${row._disattivato ? 'Riattiva' : 'Disattiva'}">${label}</button>`;
+          }
+        },
+      ],
+      pageLength: 25,
+      language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json' },
+      dom: 'rtip',
+      searching: false,
+      createdRow: function(row, data) {
+        if (data._modificato)  $(row).addClass('riga-modificata');
+        if (data._aggiunto)    $(row).addClass('riga-aggiunta');
+        if (data._disattivato) $(row).addClass('riga-disattivata');
+        $(row).find('.btn-piano').on('click', function() {
+          mostraPianoDiStudi(this.dataset.ateneo, this.dataset.laurea, this.dataset.tipo);
+        });
+        $(row).find('.btn-edit').on('click', function() { apriModalEdit(data); });
+        $(row).find('.btn-disattiva').on('click', function() { apriModalDisattiva(data); });
+      }
+    });
+  }
+
+  function escHtml(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // RICERCA
+  // ══════════════════════════════════════════════════════════
+  async function eseguiRicerca() {
+    if (!conn) return;
+    document.getElementById('status').textContent = 'Ricerca in corso...';
+    const where = buildWhere();
+    const mostraDisattivati = document.getElementById('chk-mostra-disattivati').checked;
+    const sql = `
+      SELECT
+        i.insegnamento, i.ssd, i.ateneo, i.regione, i.zona,
+        i.laurea, i.nome_classe, i.tipologia, i.durata,
+        CAST(i.anno_ins AS VARCHAR) AS anno_ins,
+        CAST(i.cfu AS VARCHAR) AS cfu,
+        CAST(i.n_curriculum AS VARCHAR) AS n_curriculum,
+        COALESCE(i.curriculum_lista, '') AS curriculum_lista,
+        i.trasversale,
+        COALESCE(i.url_ins, '') AS url_ins
+      FROM insegnamenti i
+      ${where}
+      ORDER BY i.ateneo, i.laurea, i.insegnamento
+      LIMIT 5000
+    `;
+    try {
+      const result = await conn.query(sql);
+      let rows = result.toArray().map(r => {
+        const obj = {};
+        Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+        return obj;
+      });
+
+      // Applica modifiche e disattivazioni dai dati MUR
+      rows = applicaModifiche(rows);
+
+      // Aggiunge insegnamenti ZAN- (filtrando per i filtri attivi nel limite del possibile)
+      const aggiunte = leggiAggungeIns().map(a => ({ ...a, _aggiunto: true }));
+      const disatt   = leggiDisattivazioni();
+      const aggFiltrate = aggiunte.map(a => {
+        const k  = chiaveRecord(a);
+        const kc = chiaveCorso(a.ateneo, a.laurea);
+        if (disatt[k] && disatt[k].tipo === 'insegnamento')
+          a = { ...a, _disattivato: true, _motivo_dis: disatt[k].motivo };
+        if (disatt[kc] && disatt[kc].tipo === 'corso')
+          a = { ...a, _disattivato: true, _corso_disattivato: true, _motivo_dis: disatt[kc].motivo };
+        return a;
+      });
+      rows = [...rows, ...aggFiltrate];
+
+      // Filtra disattivati se checkbox non spuntata
+      if (!mostraDisattivati) {
+        rows = rows.filter(r => !r._disattivato);
+      }
+
+      ultimiRisultati = rows;
+      dtTable.clear().rows.add(rows).draw();
+
+      const totRes = await conn.query(`SELECT COUNT(*) AS n FROM insegnamenti i ${where}`);
+      const totMur = Number(totRes.toArray()[0].n);
+      const totZan = aggFiltrate.length;
+      const totMostrati = mostraDisattivati ? rows.length : rows.length;
+      document.getElementById('contatore').innerHTML =
+        `<strong>${(totMur + totZan).toLocaleString('it-IT')}</strong> insegnamenti trovati` +
+        (totZan > 0 ? ` <span style="color:#1e40af">(di cui ${totZan} ZAN)</span>` : '') +
+        (totMur > 5000 ? ' (MUR: primi 5.000)' : '');
+      document.getElementById('status').textContent = 'Pronto';
+    } catch(e) {
+      console.error(e);
+      document.getElementById('status').textContent = 'Errore nella query';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // EXPORT CSV
+  // ══════════════════════════════════════════════════════════
+  function esportaCSV() {
+    if (!ultimiRisultati.length) { alert('Nessun dato da esportare.'); return; }
+    const colonne = ['insegnamento','ssd','ateneo','regione','zona','laurea','nome_classe',
+      'tipologia','durata','anno_ins','cfu','n_curriculum','curriculum_lista','trasversale',
+      'url_ins','anno_accademico_agg','data_aggiornamento','note_agg'];
+    const intestazione = colonne.join(';');
+    const righe = ultimiRisultati.map(row =>
+      colonne.map(col => {
+        const v = row[col] ?? '';
+        return (String(v).includes(';') || String(v).includes('"') || String(v).includes('\n'))
+          ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+      }).join(';')
+    );
+    const csv = '\uFEFF' + [intestazione, ...righe].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `myuniversity_export_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // MODALE MODIFICA (invariato dall'originale)
+  // ══════════════════════════════════════════════════════════
+  function apriModalEdit(row) {
+    editRecordCorrente = row;
+    const mods = leggiModifiche();
+    const k    = chiaveRecord(row);
+    const mod  = mods[k] || {};
+
+    document.getElementById('edit-sottotitolo').textContent = `${row.ateneo} · ${row.laurea}`;
+    document.getElementById('edit-orig-text').textContent =
+      ` SSD: ${row.ssd} · CFU: ${row.cfu} · Anno: ${row.anno_ins} · URL: ${row.url_ins || 'N/A'}`;
+    document.getElementById('edit-insegnamento').value = mod.insegnamento ?? row.insegnamento ?? '';
+    document.getElementById('edit-ssd').value          = mod.ssd          ?? row.ssd          ?? '';
+    document.getElementById('edit-cfu').value          = mod.cfu          ?? row.cfu          ?? '';
+    document.getElementById('edit-anno').value         = mod.anno_ins     ?? row.anno_ins     ?? '1';
+    document.getElementById('edit-url').value          = mod.url_ins      ?? row.url_ins      ?? '';
+    document.getElementById('edit-note').value         = mod.note_agg     ?? '';
+    document.getElementById('edit-aa').value           = annoAccademicoCorrente();
+    document.getElementById('edit-data').value         = dataOggi();
+    document.getElementById('modal-edit-overlay').classList.add('aperto');
+  }
+
+  function chiudiModalEdit() {
+    document.getElementById('modal-edit-overlay').classList.remove('aperto');
+    editRecordCorrente = null;
+  }
+
+  document.getElementById('btn-salva-edit').addEventListener('click', () => {
+    if (!editRecordCorrente) return;
+    const k    = chiaveRecord(editRecordCorrente);
+    const mods = leggiModifiche();
+    mods[k] = {
+      insegnamento:        document.getElementById('edit-insegnamento').value.trim(),
+      ssd:                 document.getElementById('edit-ssd').value.trim(),
+      cfu:                 document.getElementById('edit-cfu').value.trim(),
+      anno_ins:            document.getElementById('edit-anno').value,
+      url_ins:             document.getElementById('edit-url').value.trim(),
+      note_agg:            document.getElementById('edit-note').value.trim(),
+      anno_accademico_agg: annoAccademicoCorrente(),
+      data_aggiornamento:  dataOggi(),
+    };
+    salvaModifiche(mods);
+    aggiornaBadgeHeader();
+    chiudiModalEdit();
+    aggiornaTabellaDopo(k, null);
+    mostraToast('✅ Modifiche salvate localmente');
+  });
+
+  document.getElementById('btn-reset-edit').addEventListener('click', () => {
+    if (!editRecordCorrente) return;
+    if (!confirm('Vuoi rimuovere tutte le modifiche locali per questo insegnamento?')) return;
+    const k    = chiaveRecord(editRecordCorrente);
+    const mods = leggiModifiche();
+    delete mods[k];
+    salvaModifiche(mods);
+    aggiornaBadgeHeader();
+    chiudiModalEdit();
+    aggiornaTabellaDopo(k, editRecordCorrente);
+    mostraToast('🗑️ Modifiche rimosse');
+  });
+
+  document.getElementById('btn-annulla-edit').addEventListener('click', chiudiModalEdit);
+  document.getElementById('btn-chiudi-edit').addEventListener('click', chiudiModalEdit);
+  document.getElementById('modal-edit-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-edit-overlay')) chiudiModalEdit();
+  });
+
+  // Helper per aggiornare la riga nella tabella dopo salvataggio/reset edit
+  function aggiornaTabellaDopo(k, rowOriginale) {
+    ultimiRisultati = applicaModifiche(
+      ultimiRisultati.map(r => {
+        if (chiaveRecord(r) === k) {
+          const { _modificato, ...base } = r;
+          if (rowOriginale) {
+            return { ...base,
+              insegnamento: rowOriginale.insegnamento,
+              ssd: rowOriginale.ssd,
+              cfu: rowOriginale.cfu,
+              anno_ins: rowOriginale.anno_ins,
+              url_ins: rowOriginale.url_ins,
+            };
+          }
+          return base;
+        }
+        return r;
+      })
+    );
+    dtTable.clear().rows.add(ultimiRisultati).draw();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // STEP 1 — DISATTIVAZIONE
+  // ══════════════════════════════════════════════════════════
+  function apriModalDisattiva(row) {
+    disattivaRecordCorrente = row;
+    tipoDisattivazione = 'insegnamento';
+
+    const dis = leggiDisattivazioni();
+    const k   = chiaveRecord(row);
+    const kc  = chiaveCorso(row.ateneo, row.laurea);
+
+    const giaDisattivato = !!(dis[k] || dis[kc]);
+
+    document.getElementById('dis-titolo').textContent =
+      giaDisattivato ? '✅ Riattiva elemento' : '⛔ Disattiva elemento';
+    document.getElementById('dis-sottotitolo').textContent =
+      `${row.insegnamento} · ${row.ateneo} · ${row.laurea}`;
+
+    // Reset tipo buttons
+    document.querySelectorAll('.dis-tipo-btn').forEach(b => b.classList.remove('selezionato'));
+    document.querySelector('.dis-tipo-btn[data-tipo="insegnamento"]').classList.add('selezionato');
+
+    // Precompila se già disattivato
+    document.getElementById('dis-motivo-preset').value = '';
+    document.getElementById('dis-motivo').value = '';
+    if (giaDisattivato) {
+      const entryDis = dis[k] || dis[kc];
+      document.getElementById('dis-motivo').value = entryDis.motivo || '';
+    }
+
+    document.getElementById('btn-riattiva').style.display = giaDisattivato ? 'inline-block' : 'none';
+    document.getElementById('btn-conferma-disattiva').style.display = giaDisattivato ? 'none' : 'inline-block';
+
+    document.getElementById('modal-disattiva-overlay').classList.add('aperto');
+  }
+
+  // Selezione tipo disattivazione
+  document.querySelectorAll('.dis-tipo-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.dis-tipo-btn').forEach(b => b.classList.remove('selezionato'));
+      this.classList.add('selezionato');
+      tipoDisattivazione = this.dataset.tipo;
+    });
+  });
+
+  // Sync preset → testo
+  document.getElementById('dis-motivo-preset').addEventListener('change', function() {
+    if (this.value && this.value !== 'Altro') {
+      document.getElementById('dis-motivo').value = this.value;
+    }
+  });
+
+  document.getElementById('btn-conferma-disattiva').addEventListener('click', () => {
+    if (!disattivaRecordCorrente) return;
+    const preset = document.getElementById('dis-motivo-preset').value;
+    const extra  = document.getElementById('dis-motivo').value.trim();
+    const motivo = extra || preset || '';
+    const dis    = leggiDisattivazioni();
+    const now    = dataOggi();
+
+    if (tipoDisattivazione === 'insegnamento') {
+      const k = chiaveRecord(disattivaRecordCorrente);
+      dis[k] = { tipo: 'insegnamento', motivo, data: now,
+        ateneo: disattivaRecordCorrente.ateneo,
+        laurea: disattivaRecordCorrente.laurea,
+        insegnamento: disattivaRecordCorrente.insegnamento };
+    } else {
+      const kc = chiaveCorso(disattivaRecordCorrente.ateneo, disattivaRecordCorrente.laurea);
+      dis[kc] = { tipo: 'corso', motivo, data: now,
+        ateneo: disattivaRecordCorrente.ateneo,
+        laurea: disattivaRecordCorrente.laurea };
+    }
+    salvaDisattivazioni(dis);
+    aggiornaBadgeHeader();
+    chiudiModalDisattiva();
+    eseguiRicerca();
+    mostraToast('⛔ Elemento disattivato');
+  });
+
+  document.getElementById('btn-riattiva').addEventListener('click', () => {
+    if (!disattivaRecordCorrente) return;
+    const dis = leggiDisattivazioni();
+    const k   = chiaveRecord(disattivaRecordCorrente);
+    const kc  = chiaveCorso(disattivaRecordCorrente.ateneo, disattivaRecordCorrente.laurea);
+    delete dis[k];
+    delete dis[kc];
+    salvaDisattivazioni(dis);
+    aggiornaBadgeHeader();
+    chiudiModalDisattiva();
+    eseguiRicerca();
+    mostraToast('✅ Elemento riattivato');
+  });
+
+  function chiudiModalDisattiva() {
+    document.getElementById('modal-disattiva-overlay').classList.remove('aperto');
+    disattivaRecordCorrente = null;
+  }
+  document.getElementById('btn-annulla-disattiva').addEventListener('click', chiudiModalDisattiva);
+  document.getElementById('btn-chiudi-disattiva').addEventListener('click', chiudiModalDisattiva);
+  document.getElementById('modal-disattiva-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-disattiva-overlay')) chiudiModalDisattiva();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // STEP 2 — AGGIUNGI INSEGNAMENTO A CORSO ESISTENTE
+  // ══════════════════════════════════════════════════════════
+  document.getElementById('btn-aggiungi-ins').addEventListener('click', () => {
+    // Reset form
+    ['ai-ateneo','ai-laurea','ai-insegnamento','ai-ssd','ai-url','ai-note'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('ai-cfu').value    = '';
+    document.getElementById('ai-anno').value   = '1';
+    document.getElementById('ai-aa').value     = annoAccademicoCorrente();
+    document.getElementById('modal-aggiungi-ins-overlay').classList.add('aperto');
+  });
+
+  // Autocomplete lauree quando si sceglie ateneo
+  document.getElementById('ai-ateneo').addEventListener('change', function() {
+    popolaLaureePerAteneo(this.value.trim());
+  });
+  document.getElementById('ai-ateneo').addEventListener('input', function() {
+    if (cacheAteneoDati[this.value.trim()]) popolaLaureePerAteneo(this.value.trim());
+  });
+
+  document.getElementById('btn-salva-aggiungi-ins').addEventListener('click', () => {
+    const ateneo      = document.getElementById('ai-ateneo').value.trim();
+    const laurea      = document.getElementById('ai-laurea').value.trim();
+    const insegnamento = document.getElementById('ai-insegnamento').value.trim();
+    const ssd         = document.getElementById('ai-ssd').value.trim();
+    const cfu         = document.getElementById('ai-cfu').value.trim();
+    const anno        = document.getElementById('ai-anno').value;
+    const aa          = document.getElementById('ai-aa').value.trim();
+    const url         = document.getElementById('ai-url').value.trim();
+    const note        = document.getElementById('ai-note').value.trim();
+
+    if (!ateneo || !laurea || !insegnamento) {
+      alert('Compila i campi obbligatori: Ateneo, Corso di laurea, Nome insegnamento.');
+      return;
+    }
+
+    // Recupera regione/zona dall'ateneo se presente
+    const datiAteneo = cacheAteneoDati[ateneo] || {};
+
+    const nuovoIns = {
+      _id_zan:             idZan(),
+      _aggiunto:           true,
+      insegnamento,
+      ssd:                 ssd || '',
+      cfu:                 cfu || '',
+      anno_ins:            anno,
+      ateneo,
+      laurea,
+      regione:             datiAteneo.regione || '',
+      zona:                datiAteneo.zona    || '',
+      tipologia:           '',
+      nome_classe:         '',
+      durata:              '',
+      n_curriculum:        '1',
+      curriculum_lista:    '',
+      trasversale:         '',
+      url_ins:             url || '',
+      note_agg:            note || '',
+      anno_accademico_agg: aa || annoAccademicoCorrente(),
+      data_aggiornamento:  dataOggi(),
+    };
+
+    const aggiunte = leggiAggungeIns();
+    aggiunte.push(nuovoIns);
+    salvaAggiungeIns(aggiunte);
+    aggiornaBadgeHeader();
+
+    document.getElementById('modal-aggiungi-ins-overlay').classList.remove('aperto');
+    mostraToast(`➕ Insegnamento "${insegnamento}" aggiunto (ID: ${nuovoIns._id_zan})`);
+    eseguiRicerca();
+  });
+
+  function chiudiAggiungiIns() {
+    document.getElementById('modal-aggiungi-ins-overlay').classList.remove('aperto');
+  }
+  document.getElementById('btn-annulla-aggiungi-ins').addEventListener('click', chiudiAggiungiIns);
+  document.getElementById('btn-chiudi-aggiungi-ins').addEventListener('click', chiudiAggiungiIns);
+  document.getElementById('modal-aggiungi-ins-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-aggiungi-ins-overlay')) chiudiAggiungiIns();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // STEP 3 — AGGIUNGI NUOVO CORSO DI LAUREA
+  // ══════════════════════════════════════════════════════════
+  document.getElementById('btn-aggiungi-corso').addEventListener('click', () => {
+    ['ac-ateneo','ac-laurea','ac-classe','ac-regione','ac-zona','ac-note'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('ac-tipologia').value = 'triennale';
+    document.getElementById('ac-durata').value    = '';
+    document.getElementById('ac-aa').value        = annoAccademicoCorrente();
+    document.getElementById('modal-aggiungi-corso-overlay').classList.add('aperto');
+  });
+
+  // Autocomplete regione/zona quando si sceglie ateneo nel form Step 3
+  document.getElementById('ac-ateneo').addEventListener('change', function() {
+    const dati = cacheAteneoDati[this.value.trim()];
+    if (dati) {
+      document.getElementById('ac-regione').value = dati.regione;
+      document.getElementById('ac-zona').value    = dati.zona;
+    } else {
+      document.getElementById('ac-regione').value = '';
+      document.getElementById('ac-zona').value    = '';
+    }
+  });
+  document.getElementById('ac-ateneo').addEventListener('input', function() {
+    const dati = cacheAteneoDati[this.value.trim()];
+    if (dati) {
+      document.getElementById('ac-regione').value = dati.regione;
+      document.getElementById('ac-zona').value    = dati.zona;
+    }
+  });
+
+  document.getElementById('btn-salva-aggiungi-corso').addEventListener('click', () => {
+    const ateneo   = document.getElementById('ac-ateneo').value.trim();
+    const laurea   = document.getElementById('ac-laurea').value.trim();
+    const classe   = document.getElementById('ac-classe').value.trim();
+    const tipologia = document.getElementById('ac-tipologia').value;
+    const regione  = document.getElementById('ac-regione').value.trim();
+    const zona     = document.getElementById('ac-zona').value.trim();
+    const durata   = document.getElementById('ac-durata').value.trim();
+    const aa       = document.getElementById('ac-aa').value.trim();
+    const note     = document.getElementById('ac-note').value.trim();
+
+    if (!ateneo || !laurea || !classe) {
+      alert('Compila i campi obbligatori: Ateneo, Nome corso, Classe di laurea.');
+      return;
+    }
+
+    const nuovoCorso = {
+      _id_zan:             idZan(),
+      ateneo, laurea,
+      nome_classe:         classe,
+      tipologia, regione, zona,
+      durata:              durata || '',
+      note_agg:            note || '',
+      anno_accademico_agg: aa || annoAccademicoCorrente(),
+      data_aggiornamento:  dataOggi(),
+    };
+
+    const corsi = leggiAggiungeCorsi();
+    corsi.push(nuovoCorso);
+    salvaAggiungeCorsi(corsi);
+
+    // Aggiorna datalist lauree con il nuovo corso
+    const dl = document.getElementById('ai-laurea-list');
+    if (dl) {
+      const opt = document.createElement('option'); opt.value = laurea; dl.appendChild(opt);
+    }
+
+    aggiornaBadgeHeader();
+    document.getElementById('modal-aggiungi-corso-overlay').classList.remove('aperto');
+    mostraToast(`🎓 Corso "${laurea}" aggiunto (${ateneo})`);
+
+    // Ricostruisce l'albero se era già caricato
+    if (alberoCompleto.length > 0) costruisciVistaAteneo();
+  });
+
+  function chiudiAggiungiCorso() {
+    document.getElementById('modal-aggiungi-corso-overlay').classList.remove('aperto');
+  }
+  document.getElementById('btn-annulla-aggiungi-corso').addEventListener('click', chiudiAggiungiCorso);
+  document.getElementById('btn-chiudi-aggiungi-corso').addEventListener('click', chiudiAggiungiCorso);
+  document.getElementById('modal-aggiungi-corso-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-aggiungi-corso-overlay')) chiudiAggiungiCorso();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // STEP 4 — EXPORT / IMPORT DELTA JSON
+  // ══════════════════════════════════════════════════════════
+  document.getElementById('btn-gestisci-delta').addEventListener('click', () => {
+    deltaImportPending = null;
+    document.getElementById('delta-import-preview').style.display = 'none';
+    document.getElementById('btn-importa-delta').style.display = 'none';
+    document.getElementById('delta-file-input').value = '';
+
+    // Aggiorna statistiche export
+    const mods   = leggiModifiche();
+    const dis    = leggiDisattivazioni();
+    const ins    = leggiAggungeIns();
+    const corsi  = leggiAggiungeCorsi();
+    document.getElementById('delta-stats-export').innerHTML = `
+      <div class="delta-stat-item"><strong>${Object.keys(mods).length}</strong>Modifiche record</div>
+      <div class="delta-stat-item"><strong>${Object.keys(dis).length}</strong>Disattivazioni</div>
+      <div class="delta-stat-item"><strong>${ins.length}</strong>Ins. aggiunti</div>
+      <div class="delta-stat-item"><strong>${corsi.length}</strong>Corsi aggiunti</div>
+    `;
+
+    // Precompila nome promotore se già salvato
+    const savedPromoter = localStorage.getItem('myuniversity_promotore') || '';
+    document.getElementById('delta-promotore').value = savedPromoter;
+
+    document.getElementById('modal-delta-overlay').classList.add('aperto');
+  });
+
+  document.getElementById('btn-esporta-delta').addEventListener('click', () => {
+    const promotore = document.getElementById('delta-promotore').value.trim();
+    if (promotore) localStorage.setItem('myuniversity_promotore', promotore);
+
+    const delta = {
+ versione:              '1.0',
+      promotore:             promotore || 'Non specificato',
+      data_export:           dataOggi(),
+      modifiche:             leggiModifiche(),
+      disattivazioni:        leggiDisattivazioni(),
+      aggiunte_insegnamenti: leggiAggungeIns(),
+      aggiunte_corsi:        leggiAggiungeCorsi(),
+    };
+
+    const json = JSON.stringify(delta, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `myuniversity_delta_${new Date().toISOString().slice(0,10)}_${(promotore||'export').replace(/\s+/g,'_')}.json`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    mostraToast('📥 File delta esportato');
+  });
+
+  // ── Drag & Drop e file picker ──────────────────────────────
+  const dropZone  = document.getElementById('delta-drop-zone');
+  const fileInput = document.getElementById('delta-file-input');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) leggiFileDelta(file);
+  });
+  fileInput.addEventListener('change', function() {
+    if (this.files[0]) leggiFileDelta(this.files[0]);
+  });
+
+  function leggiFileDelta(file) {
+    if (!file.name.endsWith('.json')) {
+      alert('Seleziona un file .json valido.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (!obj.versione || !obj.modifiche) {
+          alert('File JSON non valido o non compatibile con MyUniversity.');
+          return;
+        }
+        deltaImportPending = obj;
+
+        // Conteggi
+        const nMods  = Object.keys(obj.modifiche             || {}).length;
+        const nDis   = Object.keys(obj.disattivazioni        || {}).length;
+        const nIns   = (obj.aggiunte_insegnamenti            || []).length;
+        const nCorsi = (obj.aggiunte_corsi                   || []).length;
+
+        const preview = document.getElementById('delta-import-preview');
+        preview.style.display = 'block';
+        preview.innerHTML = `
+          <strong>📂 File caricato:</strong> ${escHtml(file.name)}<br>
+          <strong>Promotore:</strong> ${escHtml(obj.promotore || 'N/D')}<br>
+          <strong>Data export:</strong> ${escHtml(obj.data_export || 'N/D')}<br>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+            <span>🔄 ${nMods} modifiche</span>
+            <span>⛔ ${nDis} disattivazioni</span>
+            <span>➕ ${nIns} insegnamenti aggiunti</span>
+            <span>🎓 ${nCorsi} corsi aggiunti</span>
+          </div>
+          <div style="margin-top:10px;font-size:0.78rem;color:#0f766e;">
+            ⚠️ L'import <strong>unisce</strong> (merge) le modifiche del collega alle tue.
+            Le chiavi già presenti localmente vengono <strong>sovrascritte</strong> da quelle importate.
+          </div>
+        `;
+        document.getElementById('btn-importa-delta').style.display = 'inline-block';
+      } catch(err) {
+        alert('Errore nella lettura del file JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  document.getElementById('btn-importa-delta').addEventListener('click', () => {
+    if (!deltaImportPending) return;
+    if (!confirm('Confermi l\'importazione? Le modifiche del collega verranno unite alle tue (merge). Le chiavi duplicate verranno sovrascritte.')) return;
+
+    // Merge modifiche (record MUR)
+    const modsLocali = leggiModifiche();
+    const modsImport = deltaImportPending.modifiche || {};
+    Object.assign(modsLocali, modsImport);
+    salvaModifiche(modsLocali);
+
+    // Merge disattivazioni
+    const disLocali  = leggiDisattivazioni();
+    const disImport  = deltaImportPending.disattivazioni || {};
+    Object.assign(disLocali, disImport);
+    salvaDisattivazioni(disLocali);
+
+    // Merge insegnamenti ZAN- (evita duplicati per _id_zan)
+    const insLocali  = leggiAggungeIns();
+    const insImport  = deltaImportPending.aggiunte_insegnamenti || [];
+    const insIdSet   = new Set(insLocali.map(x => x._id_zan));
+    insImport.forEach(x => { if (!insIdSet.has(x._id_zan)) insLocali.push(x); });
+    salvaAggiungeIns(insLocali);
+
+    // Merge corsi ZAN- (evita duplicati per _id_zan)
+    const corsiLocali = leggiAggiungeCorsi();
+    const corsiImport = deltaImportPending.aggiunte_corsi || [];
+    const corsiIdSet  = new Set(corsiLocali.map(x => x._id_zan));
+    corsiImport.forEach(x => { if (!corsiIdSet.has(x._id_zan)) corsiLocali.push(x); });
+    salvaAggiungeCorsi(corsiLocali);
+
+    deltaImportPending = null;
+    aggiornaBadgeHeader();
+    chiudiDelta();
+
+    // Ricarica albero se già aperto
+    if (alberoCompleto.length > 0) costruisciVistaAteneo();
+
+    mostraToast('📥 Delta importato con successo!');
+    eseguiRicerca();
+  });
+
+  function chiudiDelta() {
+    document.getElementById('modal-delta-overlay').classList.remove('aperto');
+    deltaImportPending = null;
+  }
+  document.getElementById('btn-chiudi-delta').addEventListener('click', chiudiDelta);
+  document.getElementById('btn-chiudi-delta-btn').addEventListener('click', chiudiDelta);
+  document.getElementById('modal-delta-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-delta-overlay')) chiudiDelta();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // TOAST
+  // ══════════════════════════════════════════════════════════
+  function mostraToast(msg, colore = '#1a7a4a') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '24px', right: '24px',
+      background: colore, color: 'white',
+      padding: '12px 20px', borderRadius: '8px',
+      fontWeight: '600', fontSize: '0.9rem',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+      zIndex: '9999', transition: 'opacity 0.4s',
+      maxWidth: '360px', lineHeight: '1.4',
+    });
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; }, 2400);
+    setTimeout(() => { document.body.removeChild(t); }, 2900);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // PIANO DI STUDI (con supporto disattivazioni e ZAN-)
+  // ══════════════════════════════════════════════════════════
+  async function mostraPianoDiStudi(ateneo, laurea, tipologia) {
+    const overlay = document.getElementById('modal-overlay');
+    const body    = document.getElementById('modal-body');
+    document.getElementById('modal-titolo').textContent      = laurea || 'Piano di studi';
+    document.getElementById('modal-sottotitolo').textContent = `${ateneo} · ${tipologia || ''}`;
+    body.innerHTML = '<div class="loading">⏳ Caricamento piano di studi...</div>';
+    overlay.classList.add('aperto');
+
+    try {
+      // Insegnamenti MUR
+      const sql = `
+        SELECT
+          CAST(anno_ins AS INTEGER) AS anno_ins,
+          insegnamento, ssd,
+          CAST(MAX(cfu) AS VARCHAR) AS cfu,
+          STRING_AGG(DISTINCT curriculum_lista, ' · ') AS curriculum_lista,
+          MAX(COALESCE(trasversale, '')) AS trasversale,
+          MAX(COALESCE(url_ins, '')) AS url_ins
+        FROM insegnamenti
+        WHERE ateneo = '${ateneo.replace(/'/g,"''")}' 
+          AND laurea = '${laurea.replace(/'/g,"''")}' 
+        GROUP BY anno_ins, insegnamento, ssd
+        ORDER BY anno_ins, insegnamento
+      `;
+      const res  = await conn.query(sql);
+      let rows = res.toArray().map(r => {
+        const obj = {};
+        Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+        return obj;
+      });
+
+      // Applica modifiche e disattivazioni
+      rows = applicaModifiche(rows);
+
+      // Aggiungi insegnamenti ZAN- per questo corso
+      const zan = leggiAggungeIns()
+        .filter(a => a.ateneo === ateneo && a.laurea === laurea)
+        .map(a => {
+          const dis = leggiDisattivazioni();
+          const k   = chiaveRecord(a);
+          let r     = { ...a, _aggiunto: true };
+          if (dis[k] && dis[k].tipo === 'insegnamento')
+            r = { ...r, _disattivato: true, _motivo_dis: dis[k].motivo };
+          return r;
+        });
+      rows = [...rows, ...zan];
+
+      // Mostra disattivati nel piano (sempre visibili con badge)
+      if (!rows.length) {
+        body.innerHTML = '<p style="color:#999;padding:20px">Nessun insegnamento trovato.</p>';
+        return;
+      }
+
+      const perAnno = {};
+      rows.forEach(r => {
+        const a = String(r.anno_ins || '?').replace('.0','');
+        if (!perAnno[a]) perAnno[a] = [];
+        perAnno[a].push(r);
+      });
+
+      let html = '';
+      const etichette = {'1':'1° anno','2':'2° anno','3':'3° anno',
+                         '4':'4° anno','5':'5° anno','6':'6° anno','?':'Anno non specificato'};
+
+      // Nota corso disattivato
+      const disCrs = leggiDisattivazioni()[chiaveCorso(ateneo, laurea)];
+      if (disCrs) {
+        html += `<div style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;
+                             padding:12px 16px;margin-bottom:16px;font-size:0.85rem;color:#6b7280;">
+          ⛔ <strong>Corso disattivato</strong> — Motivo: ${escHtml(disCrs.motivo || 'non specificato')}
+          &nbsp;·&nbsp; Data: ${escHtml(disCrs.data || '')}
+        </div>`;
+      }
+
+      Object.keys(perAnno).sort().forEach(anno => {
+        const ins    = perAnno[anno];
+        const attivi = ins.filter(r => !r._disattivato);
+        const cfuTot = attivi.reduce((s, r) => s + (parseFloat(r.cfu) || 0), 0);
+        html += `<div class="anno-block">
+          <h4>${etichette[anno] || anno + '° anno'} — ${attivi.length} ins. attivi · ${cfuTot} CFU</h4>
+          <table class="piano-table">
+            <thead><tr>
+              <th>Insegnamento</th><th>SSD</th><th>CFU</th><th>Curriculum</th><th>Link</th>
+            </tr></thead>
+            <tbody>`;
+        ins.forEach(r => {
+          const trasv  = (r.trasversale === '1' || r.trasversale === 'true')
+            ? '<span class="badge-trasv">trasversale</span>' : '';
+          const modIcn = r._modificato
+            ? '<span title="Modificato localmente" style="margin-left:4px">🔄</span>' : '';
+          const zanIcn = r._aggiunto
+            ? '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af;margin-left:4px">ZAN</span>' : '';
+          const disIcn = r._disattivato
+            ? `<span class="badge-disattivato" title="${escHtml(r._motivo_dis||'')}">⛔ non attivo</span>` : '';
+          const link   = r.url_ins && r.url_ins !== 'NA' && r.url_ins !== 'null' && r.url_ins !== ''
+            ? `<a href="${escHtml(r.url_ins)}" target="_blank">🔗</a>` : '';
+          const trCls  = r._disattivato ? ' class="riga-dis"' : '';
+          const trStyle = r._modificato && !r._disattivato ? ' style="background:#fffbe6"' : '';
+          html += `<tr${trCls}${trStyle}>
+            <td>${escHtml(r.insegnamento)}${trasv}${modIcn}${zanIcn}${disIcn}</td>
+            <td>${escHtml(r.ssd)}</td>
+            <td>${escHtml(r.cfu)}</td>
+            <td>${escHtml(r.curriculum_lista || '')}</td>
+            <td>${link}</td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      });
+
+      const totIns = rows.filter(r => !r._disattivato).length;
+      const totCfu = rows.filter(r => !r._disattivato).reduce((s, r) => s + (parseFloat(r.cfu) || 0), 0);
+      const totZan = rows.filter(r => r._aggiunto).length;
+      html = `<div style="background:#fde8ec;border-radius:8px;padding:12px 16px;
+                          margin-bottom:20px;font-size:0.85rem;color:#c8102e;font-weight:600;">
+        📊 <strong>${totIns}</strong> insegnamenti attivi · <strong>${totCfu}</strong> CFU complessivi
+        ${totZan > 0 ? `<span style="color:#1e40af;margin-left:8px">(+ ${totZan} ZAN)</span>` : ''}
+      </div>` + html;
+
+      body.innerHTML = html;
+    } catch(e) {
+      console.error(e);
+      body.innerHTML = '<p style="color:red;padding:20px">Errore nel caricamento.</p>';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // RESET FILTRI
+  // ══════════════════════════════════════════════════════════
+  function resetFiltri() {
+    document.getElementById('f-insegnamento').value = '';
+    document.getElementById('chk-mostra-disattivati').checked = false;
+    Object.values(choicesMap).forEach(ch => ch.removeActiveItems());
+    popolaClassi(null);
+    document.getElementById('cascata-badge').style.display = 'none';
+    document.getElementById('f-classe').closest('.filtro-gruppo').classList.remove('cascata-attiva');
+    if (dtTable) dtTable.clear().draw();
+    ultimiRisultati = [];
+    document.getElementById('contatore').textContent = 'Inserisci i filtri e premi Cerca';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // VISTA ATENEO (con corsi ZAN- e disattivazioni)
+  // ══════════════════════════════════════════════════════════
+  function ordinaCodiceClasse(nomeClasse) {
+    const codice = lookupClassi[(nomeClasse || '').toLowerCase()] || '';
+    if (!codice) return 99999;
+    const pesi = {'L-':1,'L/':2,'LM-':3,'LM/':4,'LMG':5,'LMR':6,'LS-':7};
+    let peso = 80000;
+    for (const [p, v] of Object.entries(pesi)) {
+      if (codice.startsWith(p)) { peso = v * 10000; break; }
+    }
+    return peso + (parseInt(codice.replace(/[^0-9]/g,''), 10) || 0);
+  }
+
+  async function costruisciVistaAteneo() {
+    if (!conn) return;
+    if (Object.keys(lookupClassi).length === 0) {
+      try { const r = await fetch('classi_lookup.json'); lookupClassi = await r.json(); }
+      catch(e) { lookupClassi = {}; }
+    }
+    document.getElementById('va-status').textContent = 'Caricamento struttura...';
+    document.getElementById('va-tree-container').innerHTML =
+      '<div class="loading">⏳ Elaborazione struttura ad albero...</div>';
+
+    try {
+      const sql = `
+        SELECT ateneo, nome_classe, tipologia, laurea,
+               COUNT(*) AS n_ins,
+               SUM(TRY_CAST(cfu AS DOUBLE)) AS tot_cfu
+        FROM insegnamenti
+        WHERE ateneo IS NOT NULL AND laurea IS NOT NULL
+        GROUP BY ateneo, nome_classe, tipologia, laurea
+        ORDER BY ateneo, nome_classe, laurea
+      `;
+      const res  = await conn.query(sql);
+      const rows = res.toArray().map(r => ({
+        ateneo:      String(r.ateneo      || ''),
+        nome_classe: String(r.nome_classe || 'Classe non specificata'),
+        tipologia:   String(r.tipologia   || ''),
+        laurea:      String(r.laurea      || ''),
+        n_ins:       Number(r.n_ins       || 0),
+        tot_cfu:     Math.round(Number(r.tot_cfu || 0)),
+      }));
+
+      // Aggiungi corsi ZAN-
+      const zanCorsi = leggiAggiungeCorsi();
+      zanCorsi.forEach(zc => {
+        rows.push({
+          ateneo:      zc.ateneo      || '',
+          nome_classe: zc.nome_classe || 'Classe non specificata',
+          tipologia:   zc.tipologia   || '',
+          laurea:      zc.laurea      || '',
+          n_ins:       leggiAggungeIns().filter(i => i.ateneo === zc.ateneo && i.laurea === zc.laurea).length,
+          tot_cfu:     leggiAggungeIns().filter(i => i.ateneo === zc.ateneo && i.laurea === zc.laurea)
+                         .reduce((s, i) => s + (parseFloat(i.cfu) || 0), 0),
+          _zanCorso:   true,
+        });
+      });
+
+      const dis = leggiDisattivazioni();
+      const map = {};
+      rows.forEach(r => {
+        if (!map[r.ateneo]) map[r.ateneo] = { classi: {}, n_ins: 0, tot_cfu: 0 };
+        map[r.ateneo].n_ins   += r.n_ins;
+        map[r.ateneo].tot_cfu += r.tot_cfu;
+        const cls = r.nome_classe;
+        if (!map[r.ateneo].classi[cls]) map[r.ateneo].classi[cls] = { corsi: [], n_ins: 0, tot_cfu: 0 };
+        map[r.ateneo].classi[cls].n_ins   += r.n_ins;
+        map[r.ateneo].classi[cls].tot_cfu += r.tot_cfu;
+
+        const kc = chiaveCorso(r.ateneo, r.laurea);
+        map[r.ateneo].classi[cls].corsi.push({
+          laurea:       r.laurea,
+          tipologia:    r.tipologia,
+          n_ins:        r.n_ins,
+          tot_cfu:      r.tot_cfu,
+          _zanCorso:    r._zanCorso || false,
+          _disattivato: !!(dis[kc] && dis[kc].tipo === 'corso'),
+          _motivo_dis:  (dis[kc] || {}).motivo || '',
+        });
+      });
+
+      alberoCompleto = Object.entries(map)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([nomeAteneo, datiAteneo]) => ({
+          ateneo:  nomeAteneo,
+          n_ins:   datiAteneo.n_ins,
+          tot_cfu: datiAteneo.tot_cfu,
+          classi:  Object.entries(datiAteneo.classi)
+            .sort((a, b) => ordinaCodiceClasse(a[0]) - ordinaCodiceClasse(b[0]))
+            .map(([nomeClasse, datiClasse]) => ({
+              classe:  nomeClasse,
+              n_ins:   datiClasse.n_ins,
+              tot_cfu: datiClasse.tot_cfu,
+              corsi:   datiClasse.corsi.sort((a, b) => a.laurea.localeCompare(b.laurea)),
+            }))
+        }));
+
+      renderAlbero(alberoCompleto);
+      document.getElementById('va-contatore').textContent =
+        `${alberoCompleto.length} atenei · ${rows.length} corsi di laurea`;
+      document.getElementById('va-status').textContent = 'Pronto';
+    } catch(e) {
+      console.error(e);
+      document.getElementById('va-status').textContent = 'Errore';
+      document.getElementById('va-tree-container').innerHTML =
+        '<p style="color:red;padding:20px">Errore nel caricamento della struttura.</p>';
+    }
+  }
+
+  function renderAlbero(dati) {
+    const container = document.getElementById('va-tree-container');
+    if (!dati.length) {
+      container.innerHTML = '<p style="color:#999;padding:20px">Nessun dato.</p>';
+      return;
+    }
+    const tipoBadgeClass = t => {
+      const m = {'triennale':'badge-triennale','magistrale':'badge-magistrale','ciclo unico':'badge-ciclo_unico'};
+      return m[(t||'').toLowerCase()] || 'badge-triennale';
+    };
+
+    let html = '<div class="tree">';
+    dati.forEach(a => {
+      html += `
+        <div class="tree-ateneo tree-node" data-ateneo="${escHtml(a.ateneo)}">
+          <div class="tree-ateneo-header" onclick="toggleNodo(this)">
+            <span class="freccia">▶</span>
+            <span>${escHtml(a.ateneo)}</span>
+            <span class="badge-stat">${a.n_ins.toLocaleString('it-IT')} ins. · ${a.tot_cfu.toLocaleString('it-IT')} CFU</span>
+          </div>
+          <div class="tree-ateneo-children">`;
+      a.classi.forEach(cl => {
+        const codiceClasse = lookupClassi[(cl.classe||'').toLowerCase()] || '';
+        html += `
+            <div class="tree-classe tree-node">
+              <div class="tree-classe-header" onclick="toggleNodo(this)">
+                <span class="freccia">▶</span>
+                <span>${codiceClasse ? codiceClasse + ' · ' : ''}${escHtml(cl.classe)}</span>
+                <span class="badge-stat-classe">${cl.n_ins} ins. · ${cl.tot_cfu} CFU</span>
+              </div>
+              <div class="tree-classe-children">`;
+        cl.corsi.forEach(corso => {
+          const zanBadge = corso._zanCorso
+            ? '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af;margin-left:4px">ZAN</span>' : '';
+          const disBadge = corso._disattivato
+            ? `<span class="badge-disattivato" title="${escHtml(corso._motivo_dis)}">⛔</span>` : '';
+          const corsoCls = corso._disattivato ? ' corso-disattivato' : '';
+          html += `
+                <div class="tree-corso${corsoCls}"
+                     onclick="apriPianoFromTree('${escHtml(a.ateneo).replace(/'/g,"\\'")}','${escHtml(corso.laurea).replace(/'/g,"\\'")}','${escHtml(corso.tipologia).replace(/'/g,"\\'")}')">
+                  <span class="badge badge-tipo ${tipoBadgeClass(corso.tipologia)}">${escHtml(corso.tipologia)}</span>
+                  <span>${escHtml(corso.laurea)}${zanBadge}${disBadge}</span>
+                  <span class="stat-corso">${corso.n_ins} ins. · ${corso.tot_cfu} CFU</span>
+                </div>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  window.toggleNodo = function(header) {
+    header.parentElement.classList.toggle('aperto');
+  };
+  window.apriPianoFromTree = function(ateneo, laurea, tipologia) {
+    mostraPianoDiStudi(
+      ateneo.replace(/\\'/g,"'"),
+      laurea.replace(/\\'/g,"'"),
+      tipologia.replace(/\\'/g,"'")
+    );
+  };
+
+  // Ricerca live nella vista ateneo
+  document.getElementById('va-search').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    if (!q) { renderAlbero(alberoCompleto); return; }
+    const filtrato = alberoCompleto.map(a => {
+      if (a.ateneo.toLowerCase().includes(q)) return a;
+      const classiFiltrate = a.classi.map(cl => {
+        const corsiFiltrati = cl.corsi.filter(c =>
+          c.laurea.toLowerCase().includes(q) || cl.classe.toLowerCase().includes(q)
+        );
+        if (!corsiFiltrati.length) return null;
+        return { ...cl, corsi: corsiFiltrati,
+          n_ins:   corsiFiltrati.reduce((s,c)=>s+c.n_ins,0),
+          tot_cfu: corsiFiltrati.reduce((s,c)=>s+c.tot_cfu,0) };
+      }).filter(Boolean);
+      if (!classiFiltrate.length) return null;
+      return { ...a, classi: classiFiltrate,
+        n_ins:   classiFiltrate.reduce((s,cl)=>s+cl.n_ins,0),
+        tot_cfu: classiFiltrate.reduce((s,cl)=>s+cl.tot_cfu,0) };
+    }).filter(Boolean);
+    renderAlbero(filtrato);
+    if (q) document.querySelectorAll('.tree-ateneo, .tree-classe').forEach(n => n.classList.add('aperto'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // TAB NAVIGATION
+  // ══════════════════════════════════════════════════════════
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('attivo'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('attivo'));
+      this.classList.add('attivo');
+      document.getElementById(this.dataset.tab).classList.add('attivo');
+      if (this.dataset.tab === 'tab-ateneo' && alberoCompleto.length === 0 && conn) {
+        costruisciVistaAteneo();
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // EVENT LISTENERS GENERALI
+  // ══════════════════════════════════════════════════════════
+  document.getElementById('btn-cerca').addEventListener('click', eseguiRicerca);
+  document.getElementById('btn-reset').addEventListener('click', resetFiltri);
+  document.getElementById('btn-export').addEventListener('click', esportaCSV);
+  document.getElementById('chk-mostra-disattivati').addEventListener('change', () => {
+    if (ultimiRisultati.length > 0) eseguiRicerca();
+  });
+  document.getElementById('f-insegnamento').addEventListener('keydown', e => {
+    if (e.key === 'Enter') eseguiRicerca();
+  });
+
+  // Chiusura modale piano di studi
+  document.getElementById('btn-chiudi-modal').addEventListener('click', () => {
+    document.getElementById('modal-overlay').classList.remove('aperto');
+  });
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay'))
+      document.getElementById('modal-overlay').classList.remove('aperto');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('modal-overlay').classList.remove('aperto');
+      chiudiModalEdit();
+      chiudiModalDisattiva();
+      chiudiAggiungiIns();
+      chiudiAggiungiCorso();
+      chiudiDelta();
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // AVVIO
+  // ══════════════════════════════════════════════════════════
+  initDuckDB().catch(err => {
+    console.error(err);
+    document.getElementById('status').textContent = 'Errore caricamento';
+    document.getElementById('tabella-container').innerHTML =
+      '<p style="color:red;padding:20px">Errore nel caricamento dei dati. ' +
+      'Assicurati che i file CSV siano nella stessa cartella di index.html.</p>';
+  });
+
+</script>
+</body>
+</html>
