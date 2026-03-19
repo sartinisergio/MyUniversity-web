@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matching Corsi di Laurea — Zanichelli MyUniversity</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--zr:#c8102e;--zrd:#a00d24;--zrl:#fbeaed;--g50:#f8f9fa;--g100:#f1f3f5;--g200:#e9ecef;--g300:#dee2e6;--g400:#ced4da;--g500:#adb5bd;--g600:#868e96;--g700:#495057;--g800:#343a40;--g900:#212529;--bl:#1971c2;--or:#e8590c;--vi:#7048e8;--gr:#2f9e44;--ra:8px;--sh:0 1px 3px rgba(0,0,0,.08);--sm:0 4px 6px rgba(0,0,0,.07);--tr:.2s ease}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--g50);color:var(--g900);line-height:1.6}
+.hdr{background:linear-gradient(135deg,var(--zr),var(--zrd));color:#fff;padding:1.2rem 2rem;box-shadow:var(--sm);position:sticky;top:0;z-index:100}
+.hdr h1{font-size:1.3rem;font-weight:700}.hdr p{font-size:.83rem;opacity:.85;margin-top:.1rem}
+.stepper{display:flex;justify-content:center;gap:.4rem;padding:1.2rem 1rem .7rem;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+.si{display:flex;align-items:center;gap:.4rem;padding:.42rem .85rem;border-radius:999px;background:var(--g200);color:var(--g600);font-size:.78rem;font-weight:600;cursor:default;transition:var(--tr)}
+.si .sn{width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--g400);color:#fff;font-size:.7rem;font-weight:700}
+.si.act{background:var(--zrl);color:var(--zr)}.si.act .sn{background:var(--zr)}
+.si.done{background:#e6f9ed;color:var(--gr)}.si.done .sn{background:var(--gr)}
+.sc{width:22px;height:2px;background:var(--g300);align-self:center}
+.ctn{max-width:1300px;margin:0 auto;padding:.7rem 2rem 3rem}
+.pnl{display:none;background:#fff;border-radius:var(--ra);box-shadow:var(--sh);padding:1.75rem;margin-top:.7rem;animation:fi .25s ease}
+.pnl.act{display:block}@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pt{font-size:1.12rem;font-weight:700;color:var(--g800);margin-bottom:.2rem}
+.ps{font-size:.84rem;color:var(--g600);margin-bottom:1.2rem}
+.ug{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.2rem}
+.ub{border:2px dashed var(--g300);border-radius:var(--ra);padding:1.6rem;text-align:center;transition:var(--tr);cursor:pointer;position:relative}
+.ub:hover,.ub.dov{border-color:var(--zr);background:var(--zrl)}.ub.ld{border-color:var(--gr);border-style:solid;background:#e6f9ed}
+.ub .ic{font-size:2.2rem;margin-bottom:.35rem}.ub .lb{font-weight:600;color:var(--g700)}.ub .ht{font-size:.76rem;color:var(--g500);margin-top:.15rem}
+.ub .fi{font-size:.78rem;color:var(--gr);font-weight:600;margin-top:.35rem}.ub input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:.3rem;padding:.5rem 1rem;border-radius:var(--ra);font-size:.84rem;font-weight:600;border:none;cursor:pointer;transition:var(--tr)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bp{background:var(--zr);color:#fff}.bp:hover:not(:disabled){background:var(--zrd);box-shadow:var(--sm)}
+.bs{background:var(--g200);color:var(--g700)}.bs:hover:not(:disabled){background:var(--g300)}
+.bg{background:var(--gr);color:#fff}.bg:hover:not(:disabled){background:#279a3a}
+.bsm{padding:.28rem .65rem;font-size:.74rem;border-radius:6px}
+.bgrp{display:flex;gap:.45rem;flex-wrap:wrap}
+.ab{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;flex-wrap:wrap;gap:.5rem}
+.tw{overflow-x:auto;margin-top:.7rem;border-radius:var(--ra);border:1px solid var(--g200)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead{background:var(--g100);position:sticky;top:0;z-index:2}
+th{padding:.55rem .65rem;text-align:left;font-weight:700;color:var(--g700);white-space:nowrap;border-bottom:2px solid var(--g300)}
+td{padding:.5rem .65rem;border-bottom:1px solid var(--g200);vertical-align:middle}
+tr:hover td{background:var(--g50)}
+.badge{display:inline-block;padding:.1rem .45rem;border-radius:999px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.bt{background:#dbeafe;color:var(--bl)}.bm{background:#ffedd5;color:var(--or)}.bc{background:#ede9fe;color:var(--vi)}.bn{background:var(--g200);color:var(--g600)}
+.ms{display:inline-flex;align-items:center;font-size:.74rem;font-weight:600;padding:.15rem .5rem;border-radius:999px}
+.ms.ok{background:#d3f9d8;color:var(--gr)}.ms.pe{background:#fff3bf;color:#e67700}
+.tabs{display:flex;border-bottom:2px solid var(--g200);margin-bottom:.7rem;overflow-x:auto}
+.tb{padding:.55rem 1rem;font-size:.8rem;font-weight:600;color:var(--g600);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:nowrap;transition:var(--tr)}
+.tb:hover{color:var(--zr)}.tb.act{color:var(--zr);border-bottom-color:var(--zr)}
+.tb .ct{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 .3rem;border-radius:999px;background:var(--g200);color:var(--g600);font-size:.66rem;font-weight:700;margin-left:.25rem}
+.tb.act .ct{background:var(--zrl);color:var(--zr)}
+.tc{display:none}.tc.act{display:block}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem;margin-bottom:1.1rem}
+.scd{background:var(--g50);border-radius:var(--ra);padding:.8rem .9rem;border-left:4px solid var(--g300)}
+.scd .sv{font-size:1.6rem;font-weight:800;line-height:1.2}.scd .sl{font-size:.74rem;color:var(--g600)}
+.scd.red{border-left-color:var(--zr)}.scd.red .sv{color:var(--zr)}
+.scd.green{border-left-color:var(--gr)}.scd.green .sv{color:var(--gr)}
+.scd.blue{border-left-color:var(--bl)}.scd.blue .sv{color:var(--bl)}
+.scd.orange{border-left-color:var(--or)}.scd.orange .sv{color:var(--or)}
+.scd.violet{border-left-color:var(--vi)}.scd.violet .sv{color:var(--vi)}
+.fb{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem;flex-wrap:wrap}
+.fb label{font-size:.78rem;font-weight:600;color:var(--g700)}
+.fb select,.fb input{padding:.32rem .6rem;border:1.5px solid var(--g300);border-radius:6px;font-size:.78rem;background:#fff;outline:none}
+.fb select:focus,.fb input:focus{border-color:var(--zr);box-shadow:0 0 0 3px rgba(200,16,46,.1)}
+.bcr{display:inline-flex;align-items:center;gap:.2rem;padding:.25rem .55rem;border-radius:6px;font-size:.72rem;font-weight:700;border:1.5px solid var(--gr);background:#e6f9ed;color:var(--gr);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.bcr:hover{background:var(--gr);color:#fff}.bcr.cd{background:var(--gr);color:#fff;cursor:default}
+.sa{width:100%;min-width:190px;padding:.3rem .4rem;border:1.5px solid var(--g300);border-radius:6px;font-size:.76rem;background:#fff}
+.sa:focus{border-color:var(--zr);outline:none}
+.ss{display:inline-block;font-size:.71rem;font-weight:700;padding:.07rem .38rem;border-radius:999px;min-width:38px;text-align:center}
+.ssh{background:#d3f9d8;color:var(--gr)}.ssm{background:#fff3bf;color:#e67700}.ssl{background:#ffe3e3;color:var(--zr)}
+.tsc{max-height:500px;overflow-y:auto}.tsc thead{position:sticky;top:0;z-index:3}
+.pbc{background:var(--g200);border-radius:999px;height:7px;overflow:hidden;margin:.35rem 0}
+.pbf{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--zr),var(--or));transition:width .4s ease}
+.msm{display:flex;align-items:center;gap:1.1rem;padding:.75rem .9rem;background:var(--g50);border-radius:var(--ra);margin-bottom:.7rem;flex-wrap:wrap}
+.msm .mi{font-size:.82rem;color:var(--g700)}.msm .mi strong{color:var(--g900)}
+.eg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.7rem;margin-top:.7rem}
+.ec{border:1.5px solid var(--g200);border-radius:var(--ra);padding:1rem;transition:var(--tr)}
+.ec:hover{border-color:var(--zr);box-shadow:var(--sm)}
+.ec h4{font-size:.88rem;margin-bottom:.15rem}.ec p{font-size:.76rem;color:var(--g600);margin-bottom:.5rem}
+.tc2{position:fixed;bottom:1.1rem;right:1.1rem;z-index:999;display:flex;flex-direction:column;gap:.35rem}
+.tst{padding:.6rem 1rem;border-radius:var(--ra);color:#fff;font-size:.82rem;font-weight:600;box-shadow:0 10px 15px rgba(0,0,0,.1);animation:slI .3s ease;max-width:340px}
+.tst.ok{background:var(--gr)}.tst.er{background:var(--zr)}.tst.in{background:var(--bl)}
+@keyframes slI{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.cp{background:var(--g50);border:1px solid var(--g200);border-radius:var(--ra);padding:.5rem;margin-top:.4rem;font-size:.73rem;max-height:110px;overflow:auto}
+.cp code{font-family:'Courier New',monospace;font-size:.68rem}
+.di{background:#fff8e1;border:1.5px solid #ffe082;border-radius:var(--ra);padding:.9rem 1.1rem;margin-bottom:.9rem;font-size:.84rem;color:var(--g800);line-height:1.6}
+.di strong{color:var(--zr)}
+.bsi{background:#d3f9d8;color:var(--gr);border:1.5px solid var(--gr);padding:.28rem .65rem;border-radius:6px;font-size:.74rem;font-weight:700;cursor:pointer;transition:var(--tr)}
+.bsi:hover{background:var(--gr);color:#fff}
+.bno{background:#ffe3e3;color:var(--zr);border:1.5px solid var(--zr);padding:.28rem .65rem;border-radius:6px;font-size:.74rem;font-weight:700;cursor:pointer;transition:var(--tr)}
+.bno:hover{background:var(--zr);color:#fff}
+.rsi{background:#f0fff4 !important}.rno{background:#fff5f5 !important}
+.rl{font-size:.72rem;font-weight:700;padding:.12rem .4rem;border-radius:999px}
+.rl-si{background:#d3f9d8;color:var(--gr)}.rl-no{background:#ffe3e3;color:var(--zr)}
+.detail-row{font-size:.72rem;color:var(--g500);font-style:italic}
+@media(max-width:768px){.ug{grid-template-columns:1fr}.stepper{gap:.25rem}.ctn{padding:.7rem 1rem}.pnl{padding:1.1rem}.sg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="hdr"><h1>Matching Corsi di Laurea</h1><p>Zanichelli MyUniversity — Aggiornamento database corsi</p></div>
+<div class="stepper" id="stepper">
+  <div class="si act"><span class="sn">1</span> Carica</div><div class="sc"></div>
+  <div class="si"><span class="sn">2</span> Atenei</div><div class="sc"></div>
+  <div class="si"><span class="sn">3</span> Verifica classi</div><div class="sc"></div>
+  <div class="si"><span class="sn">4</span> Risultati</div><div class="sc"></div>
+  <div class="si"><span class="sn">5</span> Esporta</div>
+</div>
+<div class="ctn">
+
+<!-- S1 -->
+<div class="pnl act" id="p1">
+  <h2 class="pt">Carica i file sorgente</h2><p class="ps">CSV database 2022/23 e Excel MUR 2024/25.</p>
+  <div class="ug">
+    <div class="ub" id="b-csv"><div class="ic">📄</div><div class="lb">lauree.csv — 2022/23</div><div class="ht">ateneo, laurea, nome_classe, tipologia, regione</div><div class="fi" id="i-csv"></div><div class="cp" id="cp-csv" style="display:none"></div><input type="file" accept=".csv,.txt" id="f-csv"></div>
+    <div class="ub" id="b-xlsx"><div class="ic">📊</div><div class="lb">Excel MUR — 2024/25</div><div class="ht">AA, Ateneo, Classe, descrizione Classe, Corso, …</div><div class="fi" id="i-xlsx"></div><div class="cp" id="cp-xlsx" style="display:none"></div><input type="file" accept=".xlsx,.xls" id="f-xlsx"></div>
+  </div>
+  <div class="ab"><div></div><button class="btn bp" id="go2" disabled>Avanti →</button></div>
+</div>
+
+<!-- S2 -->
+<div class="pnl" id="p2">
+  <h2 class="pt">Normalizzazione atenei</h2><p class="ps">Mappa nomi MUR → nomi CSV. Match ≥70% pre-confermati.</p>
+  <div class="msm"><div class="mi">MUR: <strong id="mt">0</strong></div><div class="mi">Mappati: <strong id="mm">0</strong></div><div class="mi">Pending: <strong id="mp">0</strong></div><div class="mi" style="flex:1"><div class="pbc"><div class="pbf" id="mpg" style="width:0%"></div></div></div></div>
+  <div class="bgrp" style="margin-bottom:.7rem"><button class="btn bg bsm" id="ca">✓ Conferma tutti</button><button class="btn bs bsm" id="cr">↺ Reset</button></div>
+  <div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo MUR</th><th>Corrispondenza CSV</th><th>Sim.</th><th>Stato</th><th>Azione</th></tr></thead><tbody id="mtb"></tbody></table></div></div>
+  <div class="ab"><button class="btn bs" id="b1">← Indietro</button><button class="btn bp" id="go3">Avanti →</button></div>
+</div>
+
+<!-- S3 -->
+<div class="pnl" id="p3">
+  <h2 class="pt">Verifica classi dubbie</h2><p class="ps">Il tool ha trovato classi con nomi simili ma non identici. Decidi se sono la stessa classe o no.</p>
+  <div class="di" id="d-info"></div>
+  <div class="bgrp" style="margin-bottom:.7rem"><button class="btn bg bsm" id="dasi">✓ Tutti uguali</button><button class="btn bs bsm" id="dano">✗ Tutti diversi</button></div>
+  <div class="tw"><div class="tsc" style="max-height:550px"><table><thead><tr><th style="width:30px">#</th><th>Ateneo</th><th>CSV (2022/23)</th><th style="width:40px"></th><th>MUR (2024/25)</th><th style="width:75px">Somiglianza</th><th style="width:180px">Decisione</th></tr></thead><tbody id="dtb"></tbody></table></div></div>
+  <div class="ab"><button class="btn bs" id="b2">← Indietro</button><button class="btn bp" id="go4">Avanti — Calcola risultati →</button></div>
+</div>
+
+<!-- S4 -->
+<div class="pnl" id="p4">
+  <h2 class="pt">Risultati del matching</h2><p class="ps">Confronto tra database 2022/23 e offerta MUR 2024/25.</p>
+  <div class="sg" id="stats"></div>
+  <div class="tabs" id="rtabs">
+    <button class="tb act" data-t="tn">Nuovi <span class="ct" id="cn">0</span></button>
+    <button class="tb" data-t="tc">Chiusi <span class="ct" id="cc">0</span></button>
+    <button class="tb" data-t="tf">Confermati <span class="ct" id="cf">0</span></button>
+    <button class="tb" data-t="tv">Variazioni <span class="ct" id="cv">0</span></button>
+    <button class="tb" data-t="tm">Non mappati <span class="ct" id="cm">0</span></button>
+  </div>
+  <div class="tc act" id="tn"><div class="fb"><label>Tipologia:</label><select id="ftn"><option value="">Tutte</option><option value="triennale">Triennale</option><option value="magistrale">Magistrale</option><option value="ciclo unico">Ciclo unico</option></select><label>Cerca:</label><input type="text" id="stn" placeholder="Ateneo, classe..."></div><div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo</th><th>Classe</th><th>Corso</th><th>Sede</th><th>Accesso</th><th>Didattica</th></tr></thead><tbody id="tbn"></tbody></table></div></div></div>
+  <div class="tc" id="tc"><div class="fb"><label>Tipologia:</label><select id="ftc"><option value="">Tutte</option><option value="triennale">Triennale</option><option value="magistrale">Magistrale</option><option value="ciclo unico">Ciclo unico</option></select><label>Cerca:</label><input type="text" id="stc" placeholder="Ateneo, classe..."></div><div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo</th><th>Classe</th><th>Tipologia</th><th>Regione</th></tr></thead><tbody id="tbc"></tbody></table></div></div></div>
+  <div class="tc" id="tf"><div class="fb"><label>Cerca:</label><input type="text" id="stf" placeholder="Ateneo, classe..."></div><div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo</th><th>Classe</th><th>Corso</th><th>Sede</th></tr></thead><tbody id="tbf"></tbody></table></div></div></div>
+  <div class="tc" id="tv"><div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo</th><th>Classi nuove</th><th>Classi chiuse</th><th>+</th><th>-</th><th>Saldo</th></tr></thead><tbody id="tbv"></tbody></table></div></div></div>
+  <div class="tc" id="tm"><div class="tw"><div class="tsc"><table><thead><tr><th>#</th><th>Ateneo MUR</th><th>Corsi</th><th>Note</th></tr></thead><tbody id="tbm"></tbody></table></div></div></div>
+  <div class="ab"><button class="btn bs" id="b3">← Indietro</button><button class="btn bp" id="go5">Avanti — Esporta →</button></div>
+</div>
+
+<!-- S5 -->
+<div class="pnl" id="p5">
+  <h2 class="pt">Esporta risultati</h2><p class="ps">File per MyUniversity e archiviazione.</p>
+  <div class="eg">
+    <div class="ec"><h4>📦 JSON Delta</h4><p>Delta per MyUniversity.</p><button class="btn bp bsm" onclick="xJSON()">Scarica</button></div>
+    <div class="ec"><h4>📋 CSV Nuovi</h4><p>Nuovi corsi 2024/25.</p><button class="btn bp bsm" onclick="xCSV('n')">Scarica</button></div>
+    <div class="ec"><h4>📋 CSV Chiusi</h4><p>Corsi chiusi.</p><button class="btn bp bsm" onclick="xCSV('c')">Scarica</button></div>
+    <div class="ec"><h4>📋 CSV Riepilogo</h4><p>Tutto con stato.</p><button class="btn bp bsm" onclick="xCSV('r')">Scarica</button></div>
+    <div class="ec"><h4>🔗 Mappatura JSON</h4><p>Riutilizzabile.</p><button class="btn bp bsm" onclick="xMap()">Scarica</button></div>
+    <div class="ec"><h4>📂 Importa mappatura</h4><p>Da precedente.</p><input type="file" accept=".json" id="imp" style="margin-top:.2rem;font-size:.78rem"></div>
+  </div>
+  <div class="ab"><button class="btn bs" id="b4">← Indietro</button><div></div></div>
+</div>
+</div>
+<div class="tc2" id="toc"></div>
+
+<script>
+const Z={csv:null,mur:null,aC:[],aM:[],map:{},ck:'nome_classe',dubbi:[],dec:{},R:{n:[],c:[],f:[],v:[],nm:[]}};
+
+/* UTIL */
+function tst(m,t='in'){const c=document.getElementById('toc'),e=document.createElement('div');e.className='tst '+t;e.textContent=m;c.appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transition='opacity .3s';setTimeout(()=>e.remove(),300)},3e3)}
+function E(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function DL(c,f,m){const b=new Blob([c],{type:m}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f;a.click();URL.revokeObjectURL(a.href)}
+
+/* CSV RFC4180 */
+function pCSV(t){const fl=t.split(/\r?\n/)[0]||'';let sc=0,cc=0,q=false;for(let i=0;i<fl.length;i++){const c=fl[i];if(c==='"')q=!q;else if(!q&&c===';')sc++;else if(!q&&c===',')cc++}
+const sep=sc>cc?';':',';const rows=[];let row=[],f='',inQ=false,i=0;while(i<t.length){const c=t[i];if(inQ){if(c==='"'){if(i+1<t.length&&t[i+1]==='"'){f+='"';i+=2}else{inQ=false;i++}}else{f+=c;i++}}else{if(c==='"'){inQ=true;i++}else if(c===sep){row.push(f.trim());f='';i++}else if(c==='\r'){i++}else if(c==='\n'){row.push(f.trim());if(row.some(x=>x!==''))rows.push(row);row=[];f='';i++}else{f+=c;i++}}}
+row.push(f.trim());if(row.some(x=>x!==''))rows.push(row);if(rows.length<2)return{h:[],d:[],sep};
+const h=rows[0].map(x=>x.replace(/^["']|["']$/g,'').toLowerCase().trim()),d=[];
+for(let r=1;r<rows.length;r++){const v=rows[r];if(v.length<2)continue;const o={};h.forEach((k,j)=>o[k]=(v[j]||'').replace(/^["']|["']$/g,''));d.push(o)}return{h,d,sep}}
+
+/* NORMALIZZAZIONE */
+function N(s){if(!s)return'';return s.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[''`\u2018\u2019\u201C\u201D]/g,'').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim()}
+function NA(s){if(!s)return'';let n=N(s);for(const p of['universita degli studi di','universita degli studi del','universita degli studi della','universita degli studi','universita della','universita del','universita di','universita ','politecnico di ','scuola normale superiore di ','scuola normale superiore'])if(n.startsWith(p)){n=n.slice(p.length).trim();break}return n}
+function toks(s){return[...new Set(N(s).split(' ').filter(t=>t.length>2))].sort()}
+
+/* Parole generiche da ignorare nel confronto qualificante */
+const GENERICHE=new Set(['scienze','ingegneria','lettere','lingue','tecnologie','tecniche','discipline','studi','della','delle','dello','degli','nella','nelle','nello','negli','metodologie','professioni','servizi']);
+
+/* Token qualificanti = token meno le parole generiche */
+function toksQ(s){return toks(s).filter(t=>!GENERICHE.has(t))}
+
+/* SIMILARITÀ */
+function lev(a,b){if(a===b)return 0;const la=a.length,lb=b.length;if(!la)return lb;if(!lb)return la;let p=Array.from({length:lb+1},(_,j)=>j);for(let i=1;i<=la;i++){let c=[i];for(let j=1;j<=lb;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[lb]}
+function sL(a,b){if(a===b)return 1;const m=Math.max(a.length,b.length);return m?1-lev(a,b)/m:0}
+
+function simC(a,b){
+  const na=N(a),nb=N(b);if(na===nb)return{s:1,m:'exact'};if(!na||!nb)return{s:0,m:'none'};
+  const r=[];
+  r.push({s:sL(na,nb),m:'lev'});
+  const tsa=toks(a).join(' '),tsb=toks(b).join(' ');r.push({s:sL(tsa,tsb),m:'tsort'});
+  const ta=new Set(toks(a)),tb=new Set(toks(b));
+  if(ta.size&&tb.size){let i=0;for(const t of ta)if(tb.has(t))i++;r.push({s:i/Math.min(ta.size,tb.size),m:'tset'})}
+  if(na.includes(nb))r.push({s:.85+nb.length/na.length*.15,m:'cont'});
+  else if(nb.includes(na))r.push({s:.85+na.length/nb.length*.15,m:'cont'});
+  const sh=ta.size<=tb.size?ta:tb,lo=ta.size>tb.size?ta:tb;
+  if(sh.size){let mt=0;for(const st of sh)for(const lt of lo)if(lt===st||lt.includes(st)||st.includes(lt)){mt++;break}const ra=mt/sh.size;if(ra>=.8)r.push({s:.75+ra*.2,m:'part'})}
+  r.sort((a,b)=>b.s-a.s);return{s:r[0].s,m:r[0].m}
+}
+
+/* Verifica se due classi sono un VERO dubbio (non un falso positivo come scienze chimiche/storiche) */
+function isRealDoubt(csvClasse,murClasse){
+  const tqC=toksQ(csvClasse),tqM=toksQ(murClasse);
+  // Se non ci sono token qualificanti, usa la sim generale
+  if(!tqC.length||!tqM.length)return true;
+  // Almeno un token qualificante deve essere condiviso o simile
+  for(const tc of tqC){
+    for(const tm of tqM){
+      if(tc===tm)return true;
+      if(tc.length>3&&tm.length>3&&(tc.includes(tm)||tm.includes(tc)))return true;
+      if(tc.length>4&&tm.length>4&&sL(tc,tm)>=0.75)return true;
+    }
+  }
+  return false;
+}
+
+function findCSV(mur){const nm=NA(mur);let best={csv:'',score:0};for(const c of Z.aC){const nc=NA(c);let s=sL(nm,nc);if(nc.includes(nm)||nm.includes(nc))s=Math.max(s,.88);const tm=nm.split(' ').filter(t=>t.length>2),tc=nc.split(' ').filter(t=>t.length>2);if(tm.length){const mt=tm.filter(t=>tc.some(c=>c.includes(t)||t.includes(c)));if(mt.length/tm.length>=.8)s=Math.max(s,.80+mt.length/tm.length*.15)}if(s>best.score)best={csv:c,score:s}}return best}
+
+/* TIPOLOGIA */
+function tip(c){if(!c)return'n/d';const u=c.toString().trim().toUpperCase();if(/^LMG[\/\-]/.test(u)||/^LMR[\/\-]/.test(u)||/\bBIS\b/.test(u)||/C\.?\s*U\.?/.test(u))return'ciclo unico';if(/^LM[\-\/]/.test(u))return'magistrale';if(/^L[\-\/]/.test(u)||/^L\d/.test(u))return'triennale';return'n/d'}
+function bT(t){switch(t){case'triennale':return'<span class="badge bt">Triennale</span>';case'magistrale':return'<span class="badge bm">Magistrale</span>';case'ciclo unico':return'<span class="badge bc">Ciclo unico</span>';default:return'<span class="badge bn">N/D</span>'}}
+function tC(t){if(!t)return'n/d';const s=t.toLowerCase();if(s.includes('ciclo')||s.includes('unico'))return'ciclo unico';if(s.includes('magistrale')&&!s.includes('ciclo'))return'magistrale';if(s.includes('triennale')||s==='l')return'triennale';return'n/d'}
+function cC(cod,desc){return`${cod?'<strong>'+E(cod)+'</strong>':''}${desc?' — '+E(desc):''}<br>${bT(tip(cod))}`}
+
+/* ========== S1 ========== */
+document.getElementById('f-csv').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const res=pCSV(ev.target.result);Z.csv=res.d;const pv=document.getElementById('cp-csv');pv.style.display='block';pv.innerHTML=`<code>Sep:"${res.sep}" | ${res.h.join(', ')}</code>`;let ck=res.h.find(h=>h==='nome_classe')||res.h.find(h=>h.includes('nome_classe'))||res.h.find(h=>h.includes('classe')&&!h.includes('cod'));Z.ck=ck||'nome_classe';Z.aC=[...new Set(Z.csv.map(r=>(r.ateneo||'').toLowerCase().trim()))].filter(Boolean).sort();document.getElementById('b-csv').classList.add('ld');document.getElementById('i-csv').textContent=`✓ ${f.name} — ${Z.csv.length} righe, ${Z.aC.length} atenei`;ck1();tst(`CSV: ${Z.csv.length} righe`,'ok')}catch(err){tst(err.message,'er')}};r.readAsText(f,'UTF-8')});
+document.getElementById('f-xlsx').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const wb=XLSX.read(ev.target.result,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],raw=XLSX.utils.sheet_to_json(ws,{defval:''}),rh=raw.length?Object.keys(raw[0]):[];document.getElementById('cp-xlsx').style.display='block';document.getElementById('cp-xlsx').innerHTML=`<code>${rh.join(', ')}</code>`;const cm={};rh.forEach(k=>{const kl=k.toLowerCase().trim().replace(/\s+/g,' ');if(!cm.AA&&(kl==='aa'||kl==='a.a.'||kl.includes('anno')))cm.AA=k;else if(!cm.At&&kl==='ateneo')cm.At=k;else if(!cm.Ar&&kl==='area')cm.Ar=k;else if(!cm.Gr&&kl.includes('gruppo'))cm.Gr=k;else if(!cm.Cl&&kl==='classe')cm.Cl=k;else if(!cm.DC&&kl.includes('descrizione')&&kl.includes('classe'))cm.DC=k;else if(!cm.Co&&(kl.includes('corso di laurea')||kl==='corso'))cm.Co=k;else if(!cm.Se&&kl.includes('sede'))cm.Se=k;else if(!cm.Ac&&kl.includes('accesso'))cm.Ac=k;else if(!cm.Di&&kl.includes('didattica'))cm.Di=k});Z.mur=raw.map(r=>({Ateneo:String(r[cm.At]||'').trim(),Area:String(r[cm.Ar]||''),Gruppo:String(r[cm.Gr]||''),Classe:String(r[cm.Cl]||'').trim(),descClasse:String(r[cm.DC]||'').trim(),Corso:String(r[cm.Co]||'').trim(),Sede:String(r[cm.Se]||'').trim(),Accesso:String(r[cm.Ac]||'').trim(),Didattica:String(r[cm.Di]||'').trim()}));Z.aM=[...new Set(Z.mur.map(r=>r.Ateneo))].filter(Boolean).sort();document.getElementById('b-xlsx').classList.add('ld');document.getElementById('i-xlsx').textContent=`✓ ${f.name} — ${Z.mur.length} righe, ${Z.aM.length} atenei`;ck1();tst(`Excel: ${Z.mur.length} righe`,'ok')}catch(err){tst(err.message,'er')}};r.readAsArrayBuffer(f)});
+function ck1(){document.getElementById('go2').disabled=!(Z.csv&&Z.mur)}
+
+/* ========== S2 ========== */
+function bMap(){Z.map={};const tb=document.getElementById('mtb');tb.innerHTML='';Z.aM.forEach((mn,i)=>{const m=findCSV(mn);const auto=m.score>=.70&&m.csv;if(auto)Z.map[mn]=m.csv;let sc='ssl';if(m.score>=.85)sc='ssh';else if(m.score>=.60)sc='ssm';let opts='<option value="">—</option>';Z.aC.forEach(c=>opts+=`<option value="${E(c)}"${m.csv===c&&m.score>=.40?' selected':''}>${E(c)}</option>`);const tr=document.createElement('tr');tr.innerHTML=`<td>${i+1}</td><td><strong>${E(mn)}</strong></td><td><select class="sa" id="s${i}">${opts}</select></td><td><span class="ss ${sc}">${Math.round(m.score*100)}%</span></td><td id="t${i}">${auto?'<span class="ms ok">✓</span>':'<span class="ms pe">⏳</span>'}</td><td><button class="bcr${auto?' cd':''}" id="b${i}" data-i="${i}" data-m="${E(mn)}">${auto?'✓':'✓ Conferma'}</button></td>`;tb.appendChild(tr)});
+document.querySelectorAll('.bcr').forEach(b=>b.addEventListener('click',function(){const i=this.dataset.i,mn=this.dataset.m,v=document.getElementById(`s${i}`).value;if(!v){tst('Seleziona ateneo','er');return}Z.map[mn]=v;document.getElementById(`t${i}`).innerHTML='<span class="ms ok">✓</span>';this.classList.add('cd');this.textContent='✓';uM()}));uM()}
+function uM(){const t=Z.aM.length,m=Object.keys(Z.map).length;document.getElementById('mt').textContent=t;document.getElementById('mm').textContent=m;document.getElementById('mp').textContent=t-m;document.getElementById('mpg').style.width=(t?Math.round(m/t*100):0)+'%'}
+document.getElementById('ca').addEventListener('click',function(){let c=0;Z.aM.forEach((mn,i)=>{const s=document.getElementById(`s${i}`);if(s&&s.value){Z.map[mn]=s.value;document.getElementById(`t${i}`).innerHTML='<span class="ms ok">✓</span>';const b=document.getElementById(`b${i}`);if(b){b.classList.add('cd');b.textContent='✓'}c++}});uM();tst(`${c} confermate`,'ok')});
+document.getElementById('cr').addEventListener('click',function(){Z.map={};bMap();tst('Reset','in')});
+
+/* ========== S3: DUBBI ========== */
+function bDubbi(){
+  Z.dubbi=[];Z.dec={};const m2c={};for(const[m,c]of Object.entries(Z.map))m2c[m]=c;
+  const csvMap=new Map();Z.csv.forEach(r=>{const a=(r.ateneo||'').toLowerCase().trim(),nc=N(r[Z.ck]||'');if(!a||!nc)return;const k=a+'|||'+nc;if(!csvMap.has(k))csvMap.set(k,r)});
+  const murMap=new Map();Z.mur.forEach(r=>{const ma=(r.Ateneo||'').trim(),ca=m2c[ma];if(!ca)return;const dc=N(r.descClasse||'');if(!dc)return;const k=ca.toLowerCase().trim()+'|||'+dc;if(!murMap.has(k))murMap.set(k,r)});
+  const csvIdx=new Map();for(const[k]of csvMap){const[a,c]=k.split('|||');if(!csvIdx.has(a))csvIdx.set(a,new Set());csvIdx.get(a).add(c)}
+
+  const ALTA=.95,BASSA=.80;const seen=new Set();
+  for(const[mk]of murMap){
+    if(csvMap.has(mk))continue;
+    const[at,mc]=mk.split('|||');const cands=csvIdx.get(at);if(!cands)continue;
+    let best={s:0,cc:''};
+    for(const cc of cands){const r=simC(mc,cc);if(r.s>best.s)best={s:r.s,cc,m:r.m}}
+    if(best.s>=BASSA&&best.s<ALTA){
+      // Filtro: verifica che sia un dubbio reale
+      if(!isRealDoubt(best.cc,mc))continue;
+      const dk=at+'|||'+best.cc+'|||'+mc;
+      if(!seen.has(dk)){seen.add(dk);Z.dubbi.push({at,cc:best.cc,mc,s:best.s,m:best.m})}
+    }
+  }
+  Z.dubbi.sort((a,b)=>b.s-a.s);rDubbi()
+}
+
+function rDubbi(){
+  const tb=document.getElementById('dtb');tb.innerHTML='';const info=document.getElementById('d-info');
+  if(!Z.dubbi.length){info.innerHTML='Nessun caso dubbio! Tutti i nomi di classe corrispondono chiaramente oppure sono palesemente diversi. Puoi procedere direttamente.';return}
+  info.innerHTML=`Trovati <strong>${Z.dubbi.length} casi</strong> dove il nome della classe è cambiato leggermente tra 2022/23 e 2024/25. Per ciascuno, decidi se è la stessa classe con nome diverso (✓ Sì) o se sono classi diverse (✗ No).`;
+  Z.dubbi.forEach((d,i)=>{const tr=document.createElement('tr');tr.id=`dr${i}`;const p=Math.round(d.s*100);let sc='ssl';if(p>=85)sc='ssh';else if(p>=75)sc='ssm';
+    tr.innerHTML=`<td>${i+1}</td><td style="font-size:.78rem">${E(d.at)}</td><td><strong>${E(d.cc)}</strong></td><td style="text-align:center;font-size:1.1rem;color:var(--g400)">↔</td><td><strong>${E(d.mc)}</strong></td><td><span class="ss ${sc}">${p}%</span></td><td id="dd${i}"><button class="bsi" data-i="${i}">✓ Sì</button> <button class="bno" data-i="${i}">✗ No</button></td>`;
+    tb.appendChild(tr)});
+  tb.querySelectorAll('.bsi').forEach(b=>b.addEventListener('click',function(){dDec(+this.dataset.i,true)}));
+  tb.querySelectorAll('.bno').forEach(b=>b.addEventListener('click',function(){dDec(+this.dataset.i,false)}));
+}
+function dDec(i,yes){const d=Z.dubbi[i];Z.dec[d.at+'|||'+d.cc+'|||'+d.mc]=yes;const tr=document.getElementById(`dr${i}`);tr.className=yes?'rsi':'rno';document.getElementById(`dd${i}`).innerHTML=yes?'<span class="rl rl-si">✓ Stessa classe</span>':'<span class="rl rl-no">✗ Diverse</span>'}
+document.getElementById('dasi').addEventListener('click',function(){Z.dubbi.forEach((_,i)=>dDec(i,true));tst(`${Z.dubbi.length} → stessa classe`,'ok')});
+document.getElementById('dano').addEventListener('click',function(){Z.dubbi.forEach((_,i)=>dDec(i,false));tst(`${Z.dubbi.length} → diverse`,'in')});
+
+/* ========== S4: MATCHING ========== */
+function doMatch(){
+  const R={n:[],c:[],f:[],v:[],nm:[]};const m2c={};for(const[m,c]of Object.entries(Z.map))m2c[m]=c;
+  const mapped=new Set(Object.values(Z.map).map(v=>v.toLowerCase().trim()));
+  const dubOK=new Map(),dubNO=new Set();
+  for(const[k,v]of Object.entries(Z.dec)){const[a,cc,mc]=k.split('|||');if(v)dubOK.set(a+'|||'+mc,a+'|||'+cc);else dubNO.add(a+'|||'+mc)}
+
+  const csvMap=new Map();Z.csv.forEach(r=>{const a=(r.ateneo||'').toLowerCase().trim(),nc=N(r[Z.ck]||'');if(!a||!nc)return;const k=a+'|||'+nc;if(!csvMap.has(k))csvMap.set(k,[]);csvMap.get(k).push(r)});
+  const murMap=new Map();const murNM=new Map();
+  Z.mur.forEach(r=>{const ma=(r.Ateneo||'').trim(),ca=m2c[ma];if(!ca){if(ma)murNM.set(ma,(murNM.get(ma)||0)+1);return}const dc=N(r.descClasse||'');if(!dc)return;const k=ca.toLowerCase().trim()+'|||'+dc;if(!murMap.has(k))murMap.set(k,[]);murMap.get(k).push(r)});
+  const csvIdx=new Map();for(const[k]of csvMap){const[a,c]=k.split('|||');if(!csvIdx.has(a))csvIdx.set(a,[]);csvIdx.get(a).push({c,k})}
+
+  const csvUsed=new Set();const TH=.95;
+  for(const[mk,mr]of murMap){const[at,mc]=mk.split('|||');
+    if(csvMap.has(mk)){csvUsed.add(mk);mr.forEach(r=>R.f.push(r));continue}
+    if(dubOK.has(mk)){const ck=dubOK.get(mk);csvUsed.add(ck);mr.forEach(r=>R.f.push(r));continue}
+    if(dubNO.has(mk)){mr.forEach(r=>R.n.push(r));continue}
+    const ca=csvIdx.get(at);if(!ca){mr.forEach(r=>R.n.push(r));continue}
+    let best={s:0,k:''};for(const x of ca){if(csvUsed.has(x.k))continue;const r=simC(mc,x.c);if(r.s>best.s)best={s:r.s,k:x.k}}
+    if(best.s>=TH){csvUsed.add(best.k);mr.forEach(r=>R.f.push(r))}
+    else mr.forEach(r=>R.n.push(r))}
+
+  for(const[ck,cr]of csvMap){if(csvUsed.has(ck))continue;const[at]=ck.split('|||');if(!mapped.has(at))continue;
+    let found=false;for(const[mk]of murMap){const[ma,mc]=mk.split('|||');if(ma!==at)continue;if(N(ck.split('|||')[1])===mc){found=true;break}
+      const dk=at+'|||'+ck.split('|||')[1]+'|||'+mc;if(Z.dec[dk]===true){found=true;break}
+      if(simC(ck.split('|||')[1],mc).s>=TH){found=true;break}}
+    if(!found)cr.forEach(r=>R.c.push(r))}
+
+  const vm=new Map();
+  R.n.forEach(r=>{const a=m2c[r.Ateneo]||r.Ateneo;if(!vm.has(a))vm.set(a,{a,n:0,c:0,cn:new Set(),cc:new Set()});vm.get(a).n++;vm.get(a).cn.add(r.descClasse||r.Classe)});
+  R.c.forEach(r=>{const a=(r.ateneo||'').toLowerCase().trim();if(!vm.has(a))vm.set(a,{a,n:0,c:0,cn:new Set(),cc:new Set()});vm.get(a).c++;vm.get(a).cc.add(r[Z.ck]||'')});
+  R.v=Array.from(vm.values()).filter(v=>v.n>0||v.c>0).sort((a,b)=>(b.n+b.c)-(a.n+a.c));
+  for(const[a,c]of murNM)R.nm.push({a,c});
+  Z.R=R;rRes()}
+
+/* ========== RENDER ========== */
+function rRes(){const R=Z.R;
+  document.getElementById('stats').innerHTML=`<div class="scd green"><div class="sv">${R.n.length}</div><div class="sl">Nuovi corsi</div></div><div class="scd red"><div class="sv">${R.c.length}</div><div class="sl">Corsi chiusi</div></div><div class="scd blue"><div class="sv">${R.f.length}</div><div class="sl">Confermati</div></div><div class="scd orange"><div class="sv">${R.v.length}</div><div class="sl">Atenei con variaz.</div></div><div class="scd violet"><div class="sv">${R.nm.length}</div><div class="sl">Non mappati</div></div>`;
+  document.getElementById('cn').textContent=R.n.length;document.getElementById('cc').textContent=R.c.length;document.getElementById('cf').textContent=R.f.length;document.getElementById('cv').textContent=R.v.length;document.getElementById('cm').textContent=R.nm.length;
+  bTab('n','tbn','ftn','stn');bTab('c','tbc','ftc','stc');bTab('f','tbf',null,'stf');rVar();rNM()}
+
+function bTab(t,tid,fid,sid){
+  const tb=document.getElementById(tid),fs=fid?document.getElementById(fid):null,si=sid?document.getElementById(sid):null;
+  function rr(){const ft=fs?fs.value:'',st=si?si.value.toLowerCase().trim():'';tb.innerHTML='';
+    let d=t==='n'?Z.R.n:t==='c'?Z.R.c:Z.R.f;
+    if(ft){if(t==='c')d=d.filter(r=>tC(r.tipologia)===ft);else d=d.filter(r=>tip(r.Classe)===ft)}
+    if(st)d=d.filter(r=>Object.values(r).join(' ').toLowerCase().includes(st));
+    if(!d.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--g500)">Nessun risultato</td></tr>';return}
+    d.forEach((r,i)=>{const tr=document.createElement('tr');
+      if(t==='n')tr.innerHTML=`<td>${i+1}</td><td>${E(r.Ateneo)}</td><td>${cC(r.Classe,r.descClasse)}</td><td>${E(r.Corso)}</td><td>${E(r.Sede)}</td><td>${E(r.Accesso)}</td><td>${E(r.Didattica)}</td>`;
+      else if(t==='c')tr.innerHTML=`<td>${i+1}</td><td>${E(r.ateneo)}</td><td>${E(r[Z.ck])}<br>${bT(tC(r.tipologia))}</td><td>${E(r.tipologia)}</td><td>${E(r.regione)}</td>`;
+      else tr.innerHTML=`<td>${i+1}</td><td>${E(r.Ateneo)}</td><td>${cC(r.Classe,r.descClasse)}</td><td>${E(r.Corso)}</td><td>${E(r.Sede)}</td>`;
+      tb.appendChild(tr)})}
+  rr();if(fs)fs.addEventListener('change',rr);if(si)si.addEventListener('input',rr)}
+
+function rVar(){const tb=document.getElementById('tbv'),d=Z.R.v;tb.innerHTML='';if(!d.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--g500)">—</td></tr>';return}
+  d.forEach((v,i)=>{const s=v.n-v.c,sc=s>0?'color:var(--gr)':s<0?'color:var(--zr)':'';const tr=document.createElement('tr');tr.innerHTML=`<td>${i+1}</td><td><strong>${E(v.a)}</strong></td><td style="font-size:.73rem;color:var(--gr)">${E([...v.cn].slice(0,3).join(', '))}</td><td style="font-size:.73rem;color:var(--zr)">${E([...v.cc].slice(0,3).join(', '))}</td><td style="color:var(--gr);font-weight:700">+${v.n}</td><td style="color:var(--zr);font-weight:700">-${v.c}</td><td style="${sc};font-weight:700">${s>0?'+':''}${s}</td>`;tb.appendChild(tr)})}
+function rNM(){const tb=document.getElementById('tbm'),d=Z.R.nm;tb.innerHTML='';if(!d.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--g500)">Tutti mappati</td></tr>';return}
+  d.forEach((n,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${i+1}</td><td><strong>${E(n.a)}</strong></td><td>${n.c}</td><td style="color:var(--or);font-size:.78rem">Torna step 2</td>`;tb.appendChild(tr)})}
+
+/* ========== EXPORT ========== */
+function csvE(r){return r.map(r=>r.map(c=>`"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\n')}
+function xJSON(){const d={meta:{generato:new Date().toISOString(),tool:'Zanichelli Matching v6',csv:'2022/23',mur:'2024/25',mappati:Object.keys(Z.map).length,dubbiRisolti:Object.keys(Z.dec).length},mappatura:Z.map,decisioni_classi:Z.dec,stats:{nuovi:Z.R.n.length,chiusi:Z.R.c.length,confermati:Z.R.f.length},nuovi:Z.R.n.map(r=>({ateneo_mur:r.Ateneo,ateneo_csv:Z.map[r.Ateneo]||'',classe:r.Classe,desc:r.descClasse,corso:r.Corso,sede:r.Sede,accesso:r.Accesso,didattica:r.Didattica,tipologia:tip(r.Classe)})),chiusi:Z.R.c.map(r=>({ateneo:r.ateneo,classe:r[Z.ck],tipologia:r.tipologia,regione:r.regione})),confermati:Z.R.f.map(r=>({ateneo_mur:r.Ateneo,ateneo_csv:Z.map[r.Ateneo]||'',classe:r.Classe,desc:r.descClasse,corso:r.Corso,sede:r.Sede}))};DL(JSON.stringify(d,null,2),'delta_myuniversity.json','application/json');tst('JSON ok','ok')}
+function xCSV(t){if(t==='n'){const h=['Ateneo MUR','Ateneo CSV','Classe','Desc','Tipologia','Corso','Sede','Accesso','Didattica'];const r=Z.R.n.map(x=>[x.Ateneo,Z.map[x.Ateneo]||'',x.Classe,x.descClasse,tip(x.Classe),x.Corso,x.Sede,x.Accesso,x.Didattica]);DL('\ufeff'+csvE([h,...r]),'nuovi_corsi.csv','text/csv;charset=utf-8')}
+  else if(t==='c'){const h=['Ateneo','Classe','Tipologia','Regione'];const r=Z.R.c.map(x=>[x.ateneo,x[Z.ck],x.tipologia,x.regione]);DL('\ufeff'+csvE([h,...r]),'corsi_chiusi.csv','text/csv;charset=utf-8')}
+  else{const h=['Stato','Ateneo','Classe','Desc','Tipologia','Corso','Sede','Accesso','Didattica','Regione'];const r=[];Z.R.n.forEach(x=>r.push(['NUOVO',x.Ateneo,x.Classe,x.descClasse,tip(x.Classe),x.Corso,x.Sede,x.Accesso,x.Didattica,'']));Z.R.c.forEach(x=>r.push(['CHIUSO',x.ateneo,'',x[Z.ck],x.tipologia,'','','','',x.regione]));Z.R.f.forEach(x=>r.push(['CONFERMATO',x.Ateneo,x.Classe,x.descClasse,tip(x.Classe),x.Corso,x.Sede,x.Accesso,x.Didattica,'']));DL('\ufeff'+csvE([h,...r]),'riepilogo.csv','text/csv;charset=utf-8')}tst('OK','ok')}
+function xMap(){DL(JSON.stringify({generato:new Date().toISOString(),mappatura:Z.map,decisioni_classi:Z.dec},null,2),'mappatura_atenei.json','application/json');tst('OK','ok')}
+document.getElementById('imp').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.mappatura){Z.map=d.mappatura;if(d.decisioni_classi)Z.dec=d.decisioni_classi;tst(`${Object.keys(Z.map).length} mappature`+(d.decisioni_classi?` + ${Object.keys(d.decisioni_classi).length} decisioni`:''),'ok');Z.aM.forEach((mn,i)=>{const s=document.getElementById(`s${i}`);if(s&&Z.map[mn]){s.value=Z.map[mn];document.getElementById(`t${i}`).innerHTML='<span class="ms ok">✓</span>';const b=document.getElementById(`b${i}`);if(b){b.classList.add('cd');b.textContent='✓'}}});uM()}else tst('Formato errato','er')}catch(err){tst(err.message,'er')}};r.readAsText(f)});
+
+/* NAV */
+function go(n){document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('act'));document.getElementById(`p${n}`).classList.add('act');document.querySelectorAll('.si').forEach((s,i)=>{s.classList.remove('act','done');if(i+1<n)s.classList.add('done');else if(i+1===n)s.classList.add('act')});window.scrollTo({top:0,behavior:'smooth'})}
+document.getElementById('go2').addEventListener('click',()=>{if(!Z.csv||!Z.mur)return;bMap();go(2)});
+document.getElementById('go3').addEventListener('click',()=>{if(!Object.keys(Z.map).length){tst('Conferma mappature','er');return}bDubbi();go(3)});
+document.getElementById('go4').addEventListener('click',()=>{doMatch();go(4)});
+document.getElementById('go5').addEventListener('click',()=>go(5));
+document.getElementById('b1').addEventListener('click',()=>go(1));
+document.getElementById('b2').addEventListener('click',()=>go(2));
+document.getElementById('b3').addEventListener('click',()=>go(3));
+document.getElementById('b4').addEventListener('click',()=>go(4));
+document.getElementById('rtabs').addEventListener('click',function(e){const b=e.target.closest('.tb');if(!b)return;document.querySelectorAll('#rtabs .tb').forEach(x=>x.classList.remove('act'));b.classList.add('act');document.querySelectorAll('.tc').forEach(t=>t.classList.remove('act'));document.getElementById(b.dataset.t).classList.add('act')});
+['b-csv','b-xlsx'].forEach(id=>{const bx=document.getElementById(id);bx.addEventListener('dragover',e=>{e.preventDefault();bx.classList.add('dov')});bx.addEventListener('dragleave',()=>bx.classList.remove('dov'));bx.addEventListener('drop',e=>{e.preventDefault();bx.classList.remove('dov');const inp=bx.querySelector('input[type=file]');if(e.dataTransfer.files.length){inp.files=e.dataTransfer.files;inp.dispatchEvent(new Event('change'))}})});
+</script>
+</body>
+</html>

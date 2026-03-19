@@ -1,0 +1,834 @@
+[
+  {
+    "cAt": "università degli studi di bari",
+    "cCorso": "scienze e gestione delle attività marittime",
+    "xCorso": "Scienze e Gestione delle Attivita' Marittime",
+    "cCode": "L-28",
+    "decision": "approve",
+    "score": 0.8224025974025975
+  },
+  {
+    "cAt": "università degli studi di bari",
+    "cCorso": "filologia, letterature e storia dell'antichità",
+    "xCorso": "Filologia, Letterature e Storia dell'Antichita'",
+    "cCode": "LM-15",
+    "decision": "approve",
+    "score": 0.7971014492753623
+  },
+  {
+    "cAt": "università degli studi di bergamo",
+    "cCorso": "meccatronica e smart technology engineering",
+    "xCorso": "Mechatronics And Smart Technology Engineering",
+    "cCode": "LM-33",
+    "decision": "approve",
+    "score": 0.6357142857142857
+  },
+  {
+    "cAt": "università degli studi di bologna",
+    "cCorso": "italianistica, culture letterarie europee, scienze linguistiche",
+    "xCorso": "Italianistica e Culture Letterarie Europee",
+    "cCode": "LM-14",
+    "decision": "approve",
+    "score": 0.5946135831381734
+  },
+  {
+    "cAt": "università degli studi di bologna",
+    "cCorso": "scienze e tecnologie alimentari",
+    "xCorso": "Tecnologie Alimentari",
+    "cCode": "L-26",
+    "decision": "approve",
+    "score": 0.5798387096774194
+  },
+  {
+    "cAt": "università degli studi di bologna",
+    "cCorso": "sicurezza e qualità delle produzioni animali",
+    "xCorso": "Sicurezza e Qualita' delle Produzioni Animali",
+    "cCode": "LM-86",
+    "decision": "approve",
+    "score": 0.822857142857143
+  },
+  {
+    "cAt": "università degli studi di bologna",
+    "cCorso": "economia e professione",
+    "xCorso": "Economia e Management",
+    "cCode": "LM-77",
+    "decision": "pending",
+    "score": 0.5204545454545455
+  },
+  {
+    "cAt": "università degli studi di brescia",
+    "cCorso": "analytics and data science for economics and management",
+    "xCorso": "Analytics e Data Science per l'Economia e il Management",
+    "cCode": "LM-DATA",
+    "decision": "approve",
+    "score": 0.5436363636363637
+  },
+  {
+    "cAt": "università degli studi di cagliari",
+    "cCorso": "ingegneria chimica",
+    "xCorso": "Ingegneria Biomedica",
+    "cCode": "L-9",
+    "decision": "pending",
+    "score": 0.5208333333333334
+  },
+  {
+    "cAt": "università degli studi di cagliari",
+    "cCorso": "management e monitoraggio del turismo sostenibile",
+    "xCorso": "Management del Turismo e della Sostenibilità",
+    "cCode": "LM-76",
+    "decision": "approve",
+    "score": 0.5137755102040816
+  },
+  {
+    "cAt": "università degli studi di cagliari",
+    "cCorso": "ingegneria meccanica",
+    "xCorso": "Ingegneria Meccanica e Gestionale",
+    "cCode": "L-9",
+    "decision": "approve",
+    "score": 0.5477272727272728
+  },
+  {
+    "cAt": "università degli studi di cagliari",
+    "cCorso": "scienze delle attività motorie e sportive",
+    "xCorso": "Scienze delle Attivita' Motorie e Sportive",
+    "cCode": "L-22",
+    "decision": "approve",
+    "score": 0.8214285714285714
+  },
+  {
+    "cAt": "università degli studi di cagliari",
+    "cCorso": "attività motorie preventive e adattate",
+    "xCorso": "Attivita' Motorie Preventive e Adattate",
+    "cCode": "LM-67",
+    "decision": "approve",
+    "score": 0.7935897435897437
+  },
+  {
+    "cAt": "università degli studi di camerino",
+    "cCorso": "tecnologie innovative per i beni culturali",
+    "xCorso": "Tecnologie e Diagnostica per i Beni Culturali",
+    "cCode": "L-43",
+    "decision": "approve",
+    "score": 0.7037500000000001
+  },
+  {
+    "cAt": "liuc - università carlo cattaneo",
+    "cCorso": "economia aziendale e management",
+    "xCorso": "Economia, Management e Governance",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.5128125
+  },
+  {
+    "cAt": "università degli studi gabriele d'annunzio di chieti e pescara",
+    "cCorso": "planetary geosciences",
+    "xCorso": "Planetary Sciences",
+    "cCode": "LM-74",
+    "decision": "approve",
+    "score": 0.569047619047619
+  },
+  {
+    "cAt": "università degli studi di firenze",
+    "cCorso": "ingegneria civile, edile e ambientale",
+    "xCorso": "Ingegneria Civile e Edile per la Sostenibilità",
+    "cCode": "L-7",
+    "decision": "approve",
+    "score": 0.5684782608695653
+  },
+  {
+    "cAt": "università degli studi di firenze",
+    "cCorso": "pianificazione della città, del territorio e del paesaggio",
+    "xCorso": "Pianificazione della Citta', del Territorio e del Paesaggio",
+    "cCode": "L-21",
+    "decision": "approve",
+    "score": 0.8469827586206897
+  },
+  {
+    "cAt": "università degli studi di firenze",
+    "cCorso": "dirigenza scolastica e pedagogia clinica",
+    "xCorso": "Dirigenza Scolastica e Pedagogia per l'Inclusione",
+    "cCode": "LM-50",
+    "decision": "approve",
+    "score": 0.6540816326530612
+  },
+  {
+    "cAt": "università degli studi di foggia",
+    "cCorso": "scienze dell'amministrazione e dell'organizzazione",
+    "xCorso": "Scienze dell'Amministrazione Digitale",
+    "cCode": "L-16",
+    "decision": "approve",
+    "score": 0.526
+  },
+  {
+    "cAt": "università degli studi di foggia",
+    "cCorso": "scienze delle attività motorie e sportive",
+    "xCorso": "Scienze delle Attivita' Motorie e Sportive",
+    "cCode": "L-22",
+    "decision": "approve",
+    "score": 0.8214285714285714
+  },
+  {
+    "cAt": "università degli studi di genova",
+    "cCorso": "ingegneria civile e ambientale",
+    "xCorso": "Ingegneria Civile, Edile e Ambientale",
+    "cCode": "L-7",
+    "decision": "approve",
+    "score": 0.8150000000000001
+  },
+  {
+    "cAt": "università degli studi di genova",
+    "cCorso": "conservazione e gestione della natura",
+    "xCorso": "Global Change e Gestione Sostenibile della Natura",
+    "cCode": "LM-60",
+    "decision": "pending",
+    "score": 0.5045918367346939
+  },
+  {
+    "cAt": "università degli studi dell' insubria",
+    "cCorso": "global entrepreneurship economics and management /imprenditorialità, economia e management internazionale (geem)",
+    "xCorso": "Global Entrepreneurship Economics And Management (Geem)",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.5152642934196332
+  },
+  {
+    "cAt": "università degli studi dell' insubria",
+    "cCorso": "economia e management dell'innovazione e della sostenibilità",
+    "xCorso": "Economia e Management dell'Innovazione e della Sostenibilita'",
+    "cCode": "L-18",
+    "decision": "approve",
+    "score": 0.8281030444964872
+  },
+  {
+    "cAt": "università degli studi di l'aquila",
+    "cCorso": "ingegneria civile e ambientale",
+    "xCorso": "Ingegneria Civile",
+    "cCode": "L-7",
+    "decision": "approve",
+    "score": 0.53
+  },
+  {
+    "cAt": "università degli studi di l'aquila",
+    "cCorso": "atmospheric science and technology",
+    "xCorso": "Atmospheric Science And Technology For Meteorology And Climate",
+    "cCode": "LM-17",
+    "decision": "approve",
+    "score": 0.5610599078341014
+  },
+  {
+    "cAt": "università degli studi di l'aquila",
+    "cCorso": "psicologia applicata, clinica e della salute",
+    "xCorso": "Psicologia Clinica, Applicata e degli Interventi",
+    "cCode": "LM-51",
+    "decision": "approve",
+    "score": 0.5239361702127661
+  },
+  {
+    "cAt": "università degli studi di messina",
+    "cCorso": "sicurezza e qualità delle produzioni animali",
+    "xCorso": "Sicurezza e Qualita' delle Produzioni Animali",
+    "cCode": "LM-86",
+    "decision": "approve",
+    "score": 0.822857142857143
+  },
+  {
+    "cAt": "università degli studi di milano",
+    "cCorso": "molecular biology of the cell",
+    "xCorso": "Molecular Biology Of The Cell - Biologia Molecolare della Cellula",
+    "cCode": "LM-6",
+    "decision": "approve",
+    "score": 0.5126984126984128
+  },
+  {
+    "cAt": "università degli studi di milano",
+    "cCorso": "molecular biotechnology and bioinformatics",
+    "xCorso": "Molecular Biotechnology And Bioinformatics - Biotecnologie Molecolari e Bioinformatica",
+    "cCode": "LM-8",
+    "decision": "approve",
+    "score": 0.5
+  },
+  {
+    "cAt": "università degli studi di milano",
+    "cCorso": "scienze e tecnologie alimentari",
+    "xCorso": "Scienze e Tecnologie per Alimenti Sostenibili",
+    "cCode": "L-26",
+    "decision": "approve",
+    "score": 0.5257142857142857
+  },
+  {
+    "cAt": "università degli studi di milano",
+    "cCorso": "informatica",
+    "xCorso": "Informatica Musicale",
+    "cCode": "L-31",
+    "decision": "pending",
+    "score": 0.5225000000000001
+  },
+  {
+    "cAt": "università degli studi di milano",
+    "cCorso": "medical biotechnology and molecular medicine",
+    "xCorso": "Medical Biotechnology And Molecular Medicine - Biotecnologie Mediche e Medicina Molecolare",
+    "cCode": "LM-9",
+    "decision": "approve",
+    "score": 0.5
+  },
+  {
+    "cAt": "università commerciale luigi bocconi di milano",
+    "cCorso": "management",
+    "xCorso": "Marketing Management",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.5
+  },
+  {
+    "cAt": "università cattolica del sacro cuore",
+    "cCorso": "scienze turistiche e valorizzazione del territorio",
+    "xCorso": "Tourism management, sostenibilità e valorizzazione del territorio",
+    "cCode": "L-15",
+    "decision": "approve",
+    "score": 0.5186631944444444
+  },
+  {
+    "cAt": "università cattolica del sacro cuore",
+    "cCorso": "psicologia degli interventi clinici: gruppi, organizzazioni, comunità",
+    "xCorso": "Psicologia degli interventi clinici: gruppi, organizzazioni, comunita'",
+    "cCode": "LM-51",
+    "decision": "approve",
+    "score": 0.8490671641791045
+  },
+  {
+    "cAt": "iulm - libera università di lingue e comunicazione",
+    "cCorso": "arti, spettacolo, eventi culturali",
+    "xCorso": "Arti ed Eventi Culturali",
+    "cCode": "L-3",
+    "decision": "approve",
+    "score": 0.6534375
+  },
+  {
+    "cAt": "università degli studi di modena e reggio emilia",
+    "cCorso": "sostenibilità integrata dei sistemi agricoli",
+    "xCorso": "Sostenibilita’ Integrata dei Sistemi Agricoli",
+    "cCode": "LM-69",
+    "decision": "approve",
+    "score": 0.7966666666666667
+  },
+  {
+    "cAt": "università degli studi di modena e reggio emilia",
+    "cCorso": "pubblicità, comunicazione digitale e creatività d'impresa",
+    "xCorso": "Pubblicita', Comunicazione Digitale e Creativita' d'Impresa",
+    "cCode": "LM-59",
+    "decision": "approve",
+    "score": 0.6939655172413793
+  },
+  {
+    "cAt": "università degli studi di napoli federico ii",
+    "cCorso": "corso di laurea in controllo di qualità",
+    "xCorso": "Controllo di Qualità",
+    "cCode": "L-29",
+    "decision": "approve",
+    "score": 0.5057692307692307
+  },
+  {
+    "cAt": "università degli studi di napoli federico ii",
+    "cCorso": "filologia, letterature e civiltà del mondo antico",
+    "xCorso": "Filologia, Letterature e Civilta' del Mondo Antico",
+    "cCode": "LM-15",
+    "decision": "approve",
+    "score": 0.8441326530612245
+  },
+  {
+    "cAt": "università degli studi di napoli federico ii",
+    "cCorso": "design per la comunità",
+    "xCorso": "Design per la Comunita'",
+    "cCode": "L-4",
+    "decision": "approve",
+    "score": 0.7408695652173913
+  },
+  {
+    "cAt": "università degli studi di napoli federico ii",
+    "cCorso": "corso di laurea in scienze e tecniche psicologiche",
+    "xCorso": "Scienze e Tecniche Psicologiche",
+    "cCode": "L-24",
+    "decision": "approve",
+    "score": 0.554
+  },
+  {
+    "cAt": "università degli studi di napoli parthenope",
+    "cCorso": "biologia per la sostenibilità",
+    "xCorso": "Biologia per la Sostenibilita'",
+    "cCode": "LM-6",
+    "decision": "approve",
+    "score": 0.75
+  },
+  {
+    "cAt": "università degli studi di napoli parthenope",
+    "cCorso": "ingegneria civile e per la tutela dell'ambiente costiero",
+    "xCorso": "Ingegneria Civile e Ambientale per la Sicurezza del Territorio e la Tutela dell'Ambiente",
+    "cCode": "LM-23",
+    "decision": "approve",
+    "score": 0.5304924242424243
+  },
+  {
+    "cAt": "università degli studi di napoli parthenope",
+    "cCorso": "economia del mare",
+    "xCorso": "Economia & Management del Mare",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.6857142857142857
+  },
+  {
+    "cAt": "università degli studi di padova",
+    "cCorso": "turismo, cultura, sostenibilità",
+    "xCorso": "Turismo, Cultura, Sostenibilita'",
+    "cCode": "LM-49",
+    "decision": "approve",
+    "score": 0.6950000000000001
+  },
+  {
+    "cAt": "università degli studi di palermo",
+    "cCorso": "biodiversità e biologia ambientale",
+    "xCorso": "Biodiversita' e Biologia Ambientale",
+    "cCode": "LM-6",
+    "decision": "approve",
+    "score": 0.7542857142857142
+  },
+  {
+    "cAt": "università degli studi di palermo",
+    "cCorso": "imprenditorialità e qualità per il sistema agroalimentare",
+    "xCorso": "Imprenditorialita' e Qualita' per il Sistema Agroalimentare",
+    "cCode": "LM-69",
+    "decision": "approve",
+    "score": 0.7250470809792844
+  },
+  {
+    "cAt": "università degli studi di parma",
+    "cCorso": "civiltà e lingue straniere moderne",
+    "xCorso": "Civilta' e Lingue Straniere Moderne",
+    "cCode": "L-11",
+    "decision": "approve",
+    "score": 0.790952380952381
+  },
+  {
+    "cAt": "università degli studi di parma",
+    "cCorso": "architettura e città sostenibili",
+    "xCorso": "Architettura e Citta' Sostenibili",
+    "cCode": "LM-4",
+    "decision": "approve",
+    "score": 0.7527272727272728
+  },
+  {
+    "cAt": "università degli studi di parma",
+    "cCorso": "scienze geologiche applicate alla sostenibilità ambientale",
+    "xCorso": "Scienze Geologiche Applicate alla Sostenibilita' Ambientale",
+    "cCode": "LM-74",
+    "decision": "approve",
+    "score": 0.8276029055690073
+  },
+  {
+    "cAt": "università degli studi di parma",
+    "cCorso": "architettura rigenerazione sostenibilità",
+    "xCorso": "Architettura Rigenerazione Sostenibilita'",
+    "cCode": "L-17",
+    "decision": "approve",
+    "score": 0.703048780487805
+  },
+  {
+    "cAt": "università degli studi di pavia",
+    "cCorso": "economics, development and innovation",
+    "xCorso": "Economics, Development And Innovation - Economia, Sviluppo e Innovazione",
+    "cCode": "LM-56",
+    "decision": "approve",
+    "score": 0.5132352941176471
+  },
+  {
+    "cAt": "università degli studi di perugia",
+    "cCorso": "economia del turismo",
+    "xCorso": "Economia e Management del Turismo",
+    "cCode": "L-18",
+    "decision": "approve",
+    "score": 0.6027272727272728
+  },
+  {
+    "cAt": "università degli studi di perugia",
+    "cCorso": "economia e management internazionale",
+    "xCorso": "Economia e Management",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.675
+  },
+  {
+    "cAt": "università degli studi del piemonte orientale amedeo avogadro",
+    "cCorso": "economia, management e istituzioni",
+    "xCorso": "Economia e Management",
+    "cCode": "LM-56",
+    "decision": "approve",
+    "score": 0.6443181818181818
+  },
+  {
+    "cAt": "università degli studi di pisa",
+    "cCorso": "filologia e storia dell'antichità",
+    "xCorso": "Filologia e Storia dell'Antichita'",
+    "cCode": "LM-15",
+    "decision": "approve",
+    "score": 0.7535294117647059
+  },
+  {
+    "cAt": "università degli studi di pisa",
+    "cCorso": "applied and exploration geophysics",
+    "xCorso": "Exploration And Applied Geophysics",
+    "cCode": "LM-79",
+    "decision": "approve",
+    "score": 0.7882352941176471
+  },
+  {
+    "cAt": "università degli studi di pisa",
+    "cCorso": "scienze e tecniche di psicologia clinica e della salute",
+    "xCorso": "Scienze e Tecniche di Psicologia Clinica e Sperimentale",
+    "cCode": "L-24",
+    "decision": "approve",
+    "score": 0.7348484848484849
+  },
+  {
+    "cAt": "università politecnica delle marche ancona",
+    "cCorso": "management della sostenibilità ed economia circolare",
+    "xCorso": "Management della Sostenibilita' ed Economia Circolare",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.8258760107816712
+  },
+  {
+    "cAt": "università degli studi di roma la sapienza",
+    "cCorso": "scienze del turismo",
+    "xCorso": "Scienze del Turismo Sostenibile",
+    "cCode": "L-15",
+    "decision": "approve",
+    "score": 0.6883064516129033
+  },
+  {
+    "cAt": "università degli studi di roma la sapienza",
+    "cCorso": "computer science",
+    "xCorso": "Computer Science - Informatica",
+    "cCode": "LM-18",
+    "decision": "approve",
+    "score": 0.6238095238095238
+  },
+  {
+    "cAt": "università degli studi di roma la sapienza",
+    "cCorso": "economia, management e diritto d'impresa",
+    "xCorso": "Economia e Management",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.5261538461538462
+  },
+  {
+    "cAt": "università degli studi di roma la sapienza",
+    "cCorso": "management delle tecnologie, innovazione e sostenibilità",
+    "xCorso": "Management delle Tecnologie, Innovazione e Sostenibilita'",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.8267857142857143
+  },
+  {
+    "cAt": "università degli studi di roma la sapienza",
+    "cCorso": "medicina e chirurgia 'à",
+    "xCorso": "Medicina e Chirurgia 'A'",
+    "cCode": "LM-41",
+    "decision": "approve",
+    "score": 0.7424999999999999
+  },
+  {
+    "cAt": "università degli studi roma tre",
+    "cCorso": "economia dell'ambiente e dello sviluppo",
+    "xCorso": "Economia dell’Ambiente, Lavoro e Sviluppo Sostenibile",
+    "cCode": "LM-56",
+    "decision": "approve",
+    "score": 0.5912087912087912
+  },
+  {
+    "cAt": "università degli studi roma tre",
+    "cCorso": "ingegneria informatica",
+    "xCorso": "Ingegneria Biomedica",
+    "cCode": "L-8",
+    "decision": "pending",
+    "score": 0.5106060606060606
+  },
+  {
+    "cAt": "unint - università degli studi internazionali di roma",
+    "cCorso": "lingue e didattica innovativa",
+    "xCorso": "Lingue per la Didattica Innovativa e L’Interculturalità",
+    "cCode": "LM-37",
+    "decision": "approve",
+    "score": 0.5515584415584416
+  },
+  {
+    "cAt": "unint - università degli studi internazionali di roma",
+    "cCorso": "investigazione, criminalità e sicurezza internazionale",
+    "xCorso": "Investigazione, Criminalita' e Sicurezza Internazionale",
+    "cCode": "LM-52",
+    "decision": "approve",
+    "score": 0.8
+  },
+  {
+    "cAt": "lumsa - libera università maria ss.assunta di roma",
+    "cCorso": "psicologia",
+    "xCorso": "Psicologia Clinica",
+    "cCode": "LM-51",
+    "decision": "pending",
+    "score": 0.525
+  },
+  {
+    "cAt": "lumsa - libera università maria ss.assunta di roma",
+    "cCorso": "management and finance",
+    "xCorso": "Management, Finance And Data Analitycs",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.548918918918919
+  },
+  {
+    "cAt": "università del salento",
+    "cCorso": "economia e finanza",
+    "xCorso": "Economia, Finanza e Innovazione",
+    "cCode": "L-33",
+    "decision": "approve",
+    "score": 0.6225
+  },
+  {
+    "cAt": "università del salento",
+    "cCorso": "gestione delle attività turistiche e culturali",
+    "xCorso": "Gestione delle Attivita' Turistiche e Culturali",
+    "cCode": "LM-49",
+    "decision": "approve",
+    "score": 0.8237082066869301
+  },
+  {
+    "cAt": "università del salento",
+    "cCorso": "materials engineering and nanotechnology - ingegneria dei materiali e nanotecnologie",
+    "xCorso": "Ingegneria dei Materiali e Nanotecnologie",
+    "cCode": "LM-53",
+    "decision": "approve",
+    "score": 0.5305555555555556
+  },
+  {
+    "cAt": "università degli studi di siena",
+    "cCorso": "medical biotechnologies - biotecnologie mediche",
+    "xCorso": "Medical Biotechnologies",
+    "cCode": "LM-9",
+    "decision": "approve",
+    "score": 0.505
+  },
+  {
+    "cAt": "università degli studi di siena",
+    "cCorso": "economia per l'ambiente e la sostenibilità",
+    "xCorso": "Economia per l'Ambiente e la Sostenibilita'",
+    "cCode": "LM-56",
+    "decision": "approve",
+    "score": 0.8219269102990034
+  },
+  {
+    "cAt": "università degli studi di siena",
+    "cCorso": "sostenibilità sociale e management del welfare",
+    "xCorso": "Sostenibilita' Sociale e Management del Welfare",
+    "cCode": "LM-87",
+    "decision": "approve",
+    "score": 0.8237082066869301
+  },
+  {
+    "cAt": "università telematica e-campus di novedrate",
+    "cCorso": "scienze delle attività motorie e sportive",
+    "xCorso": "Scienze delle Attivita' Motorie e Sportive",
+    "cCode": "L-22",
+    "decision": "approve",
+    "score": 0.8214285714285714
+  },
+  {
+    "cAt": "universitas mercatorum di roma",
+    "cCorso": "ingegneria delle infrastrutture per una mobilità sostenibile",
+    "xCorso": "Ingegneria delle Infrastrutture per Una Mobilita' Sostenibile",
+    "cCode": "L-7",
+    "decision": "approve",
+    "score": 0.8477459016393443
+  },
+  {
+    "cAt": "universitas mercatorum di roma",
+    "cCorso": "comunicazione e multimedialità",
+    "xCorso": "Comunicazione e Multimedialita'",
+    "cCode": "L-20",
+    "decision": "approve",
+    "score": 0.6959677419354839
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "matematica per la finanza e l'assicurazione",
+    "xCorso": "Matematica per L’Economia, la Finanza e l'Assicurazione",
+    "cCode": "L-35",
+    "decision": "approve",
+    "score": 0.8297619047619047
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "scienze e tecnologie alimentari",
+    "xCorso": "Tecnologie Alimentari",
+    "cCode": "L-26",
+    "decision": "approve",
+    "score": 0.5798387096774194
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "scienze e tecnologie dei sistemi e territori forestali",
+    "xCorso": "Scienze dei Sistemi Forestali e dell'Ambiente",
+    "cCode": "LM-73",
+    "decision": "pending",
+    "score": 0.51875
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "scienze strategiche e militari",
+    "xCorso": "Scienze Strategiche e della Sicurezza",
+    "cCode": "L/DS",
+    "decision": "approve",
+    "score": 0.5790540540540541
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "scienze delle attività motorie e sportive",
+    "xCorso": "Scienze e Tecniche delle Attività Motorie e Sportive",
+    "cCode": "L-22",
+    "decision": "approve",
+    "score": 0.8262362637362637
+  },
+  {
+    "cAt": "università degli studi di torino",
+    "cCorso": "scienze dell'educazione motoria e delle attività adattate",
+    "xCorso": "Scienze delle Attività Motorie Preventive e Adattate",
+    "cCode": "LM-67",
+    "decision": "approve",
+    "score": 0.5818713450292399
+  },
+  {
+    "cAt": "politecnico di torino",
+    "cCorso": "georesources and geonergy engineering",
+    "xCorso": "Georesources And Geoenergy Engineering",
+    "cCode": "LM-35",
+    "decision": "approve",
+    "score": 0.7681578947368422
+  },
+  {
+    "cAt": "politecnico di torino",
+    "cCorso": "pianificazione territoriale, urbanistica e paesaggistico-ambientale",
+    "xCorso": "Pianificazione Urbanistica e Territoriale",
+    "cCode": "LM-48",
+    "decision": "approve",
+    "score": 0.6189393939393939
+  },
+  {
+    "cAt": "università degli studi di trento",
+    "cCorso": "organizzazione, società e tecnologia",
+    "xCorso": "Organizzazione, Societa' e Tecnologia",
+    "cCode": "LM-88",
+    "decision": "approve",
+    "score": 0.755
+  },
+  {
+    "cAt": "università degli studi di trieste",
+    "cCorso": "strategia e consulenza aziendale",
+    "xCorso": "Strategia, Consulenza e Logistica Aziendale",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.7400000000000001
+  },
+  {
+    "cAt": "università degli studi di trieste",
+    "cCorso": "data science and scientific computing",
+    "xCorso": "Scientific And Data-Intensive Computing",
+    "cCode": "LM-44",
+    "decision": "approve",
+    "score": 0.5743589743589744
+  },
+  {
+    "cAt": "università degli studi di udine",
+    "cCorso": "ingegneria industriale per la sostenibilità ambientale",
+    "xCorso": "Ingegneria Industriale per la Sostenibilita' Ambientale",
+    "cCode": "L-9",
+    "decision": "approve",
+    "score": 0.8264935064935066
+  },
+  {
+    "cAt": "università degli studi di udine",
+    "cCorso": "archeologia e culture dell'antichità",
+    "xCorso": "Archeologia e Culture dell'Antichita'",
+    "cCode": "LM-2",
+    "decision": "approve",
+    "score": 0.7556756756756757
+  },
+  {
+    "cAt": "università degli studi di udine",
+    "cCorso": "allevamento e benessere animale",
+    "xCorso": "Tutela e Benessere Animale",
+    "cCode": "LM-86",
+    "decision": "approve",
+    "score": 0.6493548387096775
+  },
+  {
+    "cAt": "università degli studi carlo bo di urbino",
+    "cCorso": "lingue moderne e interculturalità",
+    "xCorso": "Lingue Moderne e Interculturalita'",
+    "cCode": "LM-37",
+    "decision": "approve",
+    "score": 0.7535294117647059
+  },
+  {
+    "cAt": "università degli studi carlo bo di urbino",
+    "cCorso": "politica società economia internazionali",
+    "xCorso": "Politica Societa' Economia Internazionali",
+    "cCode": "LM-62",
+    "decision": "approve",
+    "score": 0.7580487804878049
+  },
+  {
+    "cAt": "università degli studi carlo bo di urbino",
+    "cCorso": "economia e management",
+    "xCorso": "Economia, Management e Finanza",
+    "cCode": "LM-77",
+    "decision": "approve",
+    "score": 0.676293103448276
+  },
+  {
+    "cAt": "università degli studi ca' foscari di venezia",
+    "cCorso": "filologia e letteratura italiana",
+    "xCorso": "Filologia, Linguistica e Letteratura Italiana",
+    "cCode": "LM-14",
+    "decision": "approve",
+    "score": 0.7672727272727273
+  },
+  {
+    "cAt": "università iuav di venezia",
+    "cCorso": "arti visive e moda",
+    "xCorso": "Arti Visive e Cinema Espanso",
+    "cCode": "LM-65",
+    "decision": "approve",
+    "score": 0.5321428571428571
+  },
+  {
+    "cAt": "libera università di bolzano",
+    "cCorso": "politiche pubbliche e amministrazione",
+    "xCorso": "Politiche Pubbliche e Governance Innovativa",
+    "cCode": "LM-63",
+    "decision": "approve",
+    "score": 0.5366279069767441
+  },
+  {
+    "cAt": "università della calabria",
+    "cCorso": "biodiversità e sistemi naturali",
+    "xCorso": "Biodiversità e Conservazione dei Sistemi Naturali",
+    "cCode": "LM-60",
+    "decision": "approve",
+    "score": 0.6513605442176871
+  },
+  {
+    "cAt": "politecnico di milano",
+    "cCorso": "building and architectural engineering",
+    "xCorso": "Architectural Engineering",
+    "cCode": "LM-24",
+    "decision": "approve",
+    "score": 0.5710526315789475
+  }
+]
