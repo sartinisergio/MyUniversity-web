@@ -1589,14 +1589,14 @@
 
   async function caricaCSV() {
     const [respIns, respLau] = await Promise.all([
-      fetch('insegnamenti_nuovo.csv'),
-      fetch('lauree_nuovo.csv')
+      fetch('insegnamenti.csv'),
+      fetch('lauree.csv')
     ]);
     const [csvIns, csvLau] = await Promise.all([respIns.text(), respLau.text()]);
-    await db.registerFileText('insegnamenti_nuovo.csv', csvIns);
-    await db.registerFileText('lauree_nuovo.csv', csvLau);
-    await conn.query(`CREATE TABLE insegnamenti AS SELECT * FROM read_csv_auto('insegnamenti_nuovo.csv', header=true, ignore_errors=true);`);
-    await conn.query(`CREATE TABLE lauree AS SELECT * FROM read_csv_auto('lauree_nuovo.csv', header=true, ignore_errors=true);`);
+    await db.registerFileText('insegnamenti.csv', csvIns);
+    await db.registerFileText('lauree.csv', csvLau);
+    await conn.query(`CREATE TABLE insegnamenti AS SELECT * FROM read_csv_auto('insegnamenti.csv', header=true, ignore_errors=true);`);
+    await conn.query(`CREATE TABLE lauree AS SELECT * FROM read_csv_auto('lauree.csv', header=true, ignore_errors=true);`);
 
     document.getElementById('status').textContent = 'Pronto';
     document.getElementById('tabella-container').innerHTML =
