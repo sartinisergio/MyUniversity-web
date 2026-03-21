@@ -1066,6 +1066,75 @@
   font-size: 0.75rem;
   flex-shrink: 0;
 }
+/* ══════════════════════════════════════════════
+   TAB RICERCA LAUREE — stili dedicati
+══════════════════════════════════════════════ */
+table#tabella-lauree { width: 100% !important; font-size: 0.85rem; }
+table#tabella-lauree thead th {
+  background: #f0f0f0; color: #444;
+  font-weight: 600; white-space: nowrap;
+}
+table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
+
+.badge-laurea-triennale   { background: #e3f0ff; color: #1a5fa8; }
+.badge-laurea-magistrale  { background: #fff3e0; color: #e65100; }
+.badge-laurea-ciclounico  { background: #e8f5e9; color: #2e7d32; }
+
+.pill-isc {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 0.75rem; font-weight: 600;
+  background: #f3f4f6; color: #374151;
+}
+.pill-isc.alto  { background: #dcfce7; color: #166534; }
+.pill-isc.medio { background: #fef9c3; color: #854d0e; }
+.pill-isc.basso { background: #fee2e2; color: #991b1b; }
+
+#modal-laurea-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 1400;
+  justify-content: center; align-items: flex-start;
+  padding: 40px 16px; overflow-y: auto;
+}
+#modal-laurea-overlay.aperto { display: flex; }
+#modal-laurea-box {
+  background: white; border-radius: 12px; width: 100%; max-width: 1000px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22); overflow: hidden; margin: auto;
+}
+#modal-laurea-header {
+  background: #1e40af; color: white; padding: 18px 24px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+#modal-laurea-header h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+#modal-laurea-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+#btn-chiudi-laurea-modal {
+  background: rgba(255,255,255,0.25); color: white; border: none;
+  border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+}
+#btn-chiudi-laurea-modal:hover { background: rgba(255,255,255,0.4); }
+#modal-laurea-body { padding: 20px 24px; max-height: 72vh; overflow-y: auto; }
+
+.laurea-scheda {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 0.82rem;
+}
+.laurea-scheda-item { display: flex; flex-direction: column; gap: 2px; }
+.laurea-scheda-item .ls-label {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: #1e40af; opacity: 0.75;
+}
+.laurea-scheda-item .ls-val { font-weight: 600; color: #1e3a8a; font-size: 0.85rem; }
+
+#btn-cerca-lauree  { background: #1e40af; color: white; }
+#btn-cerca-lauree:hover  { background: #1e3a8a; }
+#btn-reset-lauree  { background: #eee; color: #555; }
+#btn-export-lauree { background: #1a7a4a; color: white; }
+#btn-export-lauree:hover { background: #155f39; }
+#btn-export-lauree:disabled { background: #aaa; cursor: not-allowed; }
+#contatore-lauree strong { color: #1e40af; }
+#status-lauree { font-size: 0.85rem; color: #999; font-style: italic; }
+
   </style>
 </head>
 <body>
@@ -1084,8 +1153,9 @@
 
   <!-- ── TAB NAVIGATION ── -->
   <div class="tab-nav">
-    <button class="tab-btn attivo" data-tab="tab-ricerca">🔍 Ricerca Insegnamenti</button>
-    <button class="tab-btn" data-tab="tab-ateneo">🏛️ Vista Ateneo</button>
+    <button class="tab-btn attivo" data-tab="tab-ateneo">🏛️ Vista Ateneo</button>
+    <button class="tab-btn" data-tab="tab-lauree">🎓 Ricerca Lauree</button>
+    <button class="tab-btn" data-tab="tab-ricerca">🔍 Ricerca Insegnamenti</button>
   </div>
 
   <!-- ══════════════════════════════════════════════
@@ -1101,7 +1171,7 @@
   <!-- ══════════════════════════════════════════════
        TAB 1: RICERCA INSEGNAMENTI
   ══════════════════════════════════════════════ -->
-  <div id="tab-ricerca" class="tab-content attivo">
+    <div id="tab-ricerca" class="tab-content">
 
     <div class="filtri">
       <h2>🔍 Filtri di ricerca</h2>
@@ -1197,9 +1267,85 @@
   </div><!-- /tab-ricerca -->
 
   <!-- ══════════════════════════════════════════════
+       TAB: RICERCA LAUREE
+  ══════════════════════════════════════════════ -->
+  <div id="tab-lauree" class="tab-content">
+
+    <div class="filtri">
+      <h2>🎓 Filtri Ricerca Lauree</h2>
+      <div class="filtri-grid">
+
+        <div class="filtro-gruppo">
+          <label>Cerca corso di laurea</label>
+          <input type="text" id="fl-laurea" placeholder="es. Biotecnologie, Informatica...">
+          <small style="color:#999;font-size:0.72rem;margin-top:4px;display:block;line-height:1.4">
+            Spazio = AND &nbsp;·&nbsp; Virgola = OR
+          </small>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Zona geografica</label>
+          <select id="fl-zona" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Regione</label>
+          <select id="fl-regione" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Ateneo</label>
+          <select id="fl-ateneo" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Tipologia corso</label>
+          <select id="fl-tipologia" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Classe di laurea</label>
+          <select id="fl-classe" multiple></select>
+        </div>
+
+        <div class="filtro-gruppo">
+          <label>Anno accademico</label>
+          <select id="fl-aa" multiple></select>
+        </div>
+
+      </div>
+
+      <div class="filtri-extra" style="margin-top:12px;">
+        <input type="checkbox" id="fl-chk-isc">
+        <label for="fl-chk-isc" style="font-size:0.85rem;font-weight:500;color:#555;
+               text-transform:none;letter-spacing:0;">
+          📊 Mostra solo corsi con iscritti &gt; 0
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button id="btn-cerca-lauree">🔍 Cerca</button>
+        <button id="btn-reset-lauree">↺ Reset</button>
+        <button id="btn-export-lauree" disabled>⬇ Esporta CSV</button>
+      </div>
+    </div>
+
+    <div class="risultati">
+      <div class="risultati-header">
+        <div id="contatore-lauree">Inserisci i filtri e premi Cerca</div>
+        <div id="status-lauree">In attesa...</div>
+      </div>
+      <div id="tabella-lauree-container">
+        <div class="loading">⏳ In attesa del caricamento dati...</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-lauree -->
+
+  <!-- ══════════════════════════════════════════════
        TAB 2: VISTA ATENEO
   ══════════════════════════════════════════════ -->
-  <div id="tab-ateneo" class="tab-content">
+    <div id="tab-ateneo" class="tab-content attivo">
     <div id="vista-ateneo">
       <div class="va-header">
         <div>
@@ -1651,6 +1797,8 @@
   // ══════════════════════════════════════════════════════════
   // APPLICA MODIFICHE / DISATTIVAZIONI / AGGIUNTE A ROWS
   // ══════════════════════════════════════════════════════════
+  // Esponi applicaModifiche per il modulo tab-lauree
+  window.__muApplicaModifiche = (rows) => applicaModifiche(rows);
   function applicaModifiche(rows) {
     const mods = leggiModifiche();
     const dis  = leggiDisattivazioni();
@@ -1675,7 +1823,9 @@
       return r;
     });
   }
-
+  window.__muApplicaModifiche = applicaModifiche;
+  window.__muAggiornaBadge    = aggiornaBadgeHeader;
+  window.__muLookupClassi     = lookupClassi;
   function applicaAggiunte(rows) {
     // Aggiunge i record ZAN- all'array risultati
     const aggiunte = leggiAggungeIns();
@@ -1695,7 +1845,8 @@
     const logger = new duckdb.ConsoleLogger();
     db = new duckdb.AsyncDuckDB(logger, worker);
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-    conn = await db.connect();
+     conn = await db.connect();
+    window.__muConn = conn;                          // esposto per tab-lauree
     document.getElementById('status').textContent = 'Caricamento CSV...';
     await caricaCSV();
   }
@@ -1722,6 +1873,10 @@
 
     // Pre-carica cache atenei per autocomplete Step 2/3
     await caricaCacheAtenei();
+     // Carica Vista Ateneo automaticamente all'avvio se è la tab attiva
+    if (document.querySelector('.tab-btn.attivo')?.dataset.tab === 'tab-ateneo') {
+      costruisciVistaAteneo();
+    }
     aggiornaBadgeHeader();
   }
 
@@ -2516,13 +2671,14 @@
     const dis    = leggiDisattivazioni();
     const ins    = leggiAggungeIns();
     const corsi  = leggiAggiungeCorsi();
+    const urlLauree = JSON.parse(localStorage.getItem('myuniversity_url_lauree_v1') || '{}');
     document.getElementById('delta-stats-export').innerHTML = `
       <div class="delta-stat-item"><strong>${Object.keys(mods).length}</strong>Modifiche record</div>
       <div class="delta-stat-item"><strong>${Object.keys(dis).length}</strong>Disattivazioni</div>
       <div class="delta-stat-item"><strong>${ins.length}</strong>Ins. aggiunti</div>
       <div class="delta-stat-item"><strong>${corsi.length}</strong>Corsi aggiunti</div>
+      <div class="delta-stat-item"><strong>${Object.keys(urlLauree).length}</strong>URL lauree</div>
     `;
-
     // Precompila nome promotore se già salvato
     const savedPromoter = localStorage.getItem('myuniversity_promotore') || '';
     document.getElementById('delta-promotore').value = savedPromoter;
@@ -2535,13 +2691,14 @@
     if (promotore) localStorage.setItem('myuniversity_promotore', promotore);
 
     const delta = {
- versione:              '1.0',
+      versione:              '1.0',
       promotore:             promotore || 'Non specificato',
       data_export:           dataOggi(),
       modifiche:             leggiModifiche(),
       disattivazioni:        leggiDisattivazioni(),
       aggiunte_insegnamenti: leggiAggungeIns(),
       aggiunte_corsi:        leggiAggiungeCorsi(),
+      url_lauree:            JSON.parse(localStorage.getItem('myuniversity_url_lauree_v1') || '{}'),
     };
 
     const json = JSON.stringify(delta, null, 2);
@@ -2641,6 +2798,11 @@
     insImport.forEach(x => { if (!insIdSet.has(x._id_zan)) insLocali.push(x); });
     salvaAggiungeIns(insLocali);
 
+   // Merge URL lauree aggiornati
+    const urlLaureeLocali  = JSON.parse(localStorage.getItem('myuniversity_url_lauree_v1') || '{}');
+    const urlLaureeImport  = deltaImportPending.url_lauree || {};
+    Object.assign(urlLaureeLocali, urlLaureeImport);
+    localStorage.setItem('myuniversity_url_lauree_v1', JSON.stringify(urlLaureeLocali));
     // Merge corsi ZAN- (evita duplicati per _id_zan)
     const corsiLocali = leggiAggiungeCorsi();
     const corsiImport = deltaImportPending.aggiunte_corsi || [];
@@ -3096,8 +3258,17 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('attivo'));
       this.classList.add('attivo');
       document.getElementById(this.dataset.tab).classList.add('attivo');
-      if (this.dataset.tab === 'tab-ateneo' && alberoCompleto.length === 0 && conn) {
+       if (this.dataset.tab === 'tab-ateneo' && alberoCompleto.length === 0 && conn) {
         costruisciVistaAteneo();
+      }
+      if (this.dataset.tab === 'tab-ateneo' && alberoCompleto.length === 0 && !conn) {
+        // conn non ancora pronto, aspetta e riprova
+        const attendi = setInterval(() => {
+          if (conn) {
+            clearInterval(attendi);
+            costruisciVistaAteneo();
+          }
+        }, 200);
       }
     });
   });
@@ -4246,6 +4417,24 @@ function setSelectValue(selector, value) {
 
 })();
 </script>
+<!-- ══════════════════════════════════════════════
+     MODALE INSEGNAMENTI LAUREA
+══════════════════════════════════════════════ -->
+<div id="modal-laurea-overlay">
+  <div id="modal-laurea-box">
+    <div id="modal-laurea-header">
+      <div>
+        <h3 id="modal-laurea-titolo">Insegnamenti del corso</h3>
+        <p  id="modal-laurea-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-laurea-modal">✕ Chiudi</button>
+    </div>
+    <div id="modal-laurea-body">
+      <div class="loading">Caricamento insegnamenti...</div>
+    </div>
+  </div>
+</div>
+
 <!-- MODALE LISTA CURRICULUM -->
 <div id="modal-curr-overlay">
   <div id="modal-curr-box">
@@ -4261,5 +4450,859 @@ function setSelectValue(selector, value) {
     </div>
   </div>
 </div>
+<!-- ══════════════════════════════════════════════
+     MODULO: Tab Ricerca Lauree
+══════════════════════════════════════════════ -->
+<script type="module">
+
+// Attende che DuckDB (conn) sia pronto nel modulo principale
+async function waitForConn(maxMs = 20000) {
+  const t0 = Date.now();
+  while (!window.__muConn) {
+    if (Date.now() - t0 > maxMs) throw new Error('DuckDB conn non disponibile');
+    await new Promise(r => setTimeout(r, 150));
+  }
+  return window.__muConn;
+}
+
+// ── Stato modulo ─────────────────────────────────────────────────
+const LM = {
+  choicesMap:      {},
+  ultimiRisultati: [],
+  dtTable:         null,
+  pronto:          false,
+  lookupClassi:    {},
+};
+
+// ── Utilities ────────────────────────────────────────────────────
+function escH(s) {
+  return (s ?? '').toString()
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function getValsL(id) {
+  const ch = LM.choicesMap[id];
+  if (ch) return ch.getValue(true);
+  const el = document.getElementById(id);
+  return el ? [el.value].filter(Boolean) : [];
+}
+function inClauseL(col, vals) {
+  if (!vals || !vals.length) return null;
+  if (vals.length === 1) return `${col} = '${vals[0].replace(/'/g,"''")}'`;
+  return `${col} IN (${vals.map(v=>`'${v.replace(/'/g,"''")}'`).join(',')})`;
+}
+function pillIsc(n) {
+  const v = parseInt(n) || 0;
+  if (v <= 0) return `<span class="pill-isc">—</span>`;
+  if (v >= 100) return `<span class="pill-isc alto">${v.toLocaleString('it-IT')}</span>`;
+  if (v >= 30)  return `<span class="pill-isc medio">${v.toLocaleString('it-IT')}</span>`;
+  return `<span class="pill-isc basso">${v.toLocaleString('it-IT')}</span>`;
+}
+function badgeTipo(t) {
+  const map = {
+    'triennale':   'badge badge-laurea-triennale',
+    'magistrale':  'badge badge-laurea-magistrale',
+    'ciclo unico': 'badge badge-laurea-ciclounico',
+  };
+  return `<span class="${map[(t||'').toLowerCase()]||'badge'}">${escH(t)}</span>`;
+}
+function mostraToastL(msg, colore = '#1e40af') {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'24px', right:'24px',
+    background:colore, color:'white', padding:'12px 20px',
+    borderRadius:'8px', fontWeight:'600', fontSize:'0.9rem',
+    boxShadow:'0 4px 16px rgba(0,0,0,0.2)', zIndex:'9999',
+    transition:'opacity 0.4s', maxWidth:'360px', lineHeight:'1.4',
+  });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; }, 2400);
+  setTimeout(() => { document.body.removeChild(t); }, 2900);
+}
+
+// ── Choices.js per i filtri lauree ───────────────────────────────
+function inizializzaChoicesLauree() {
+  ['fl-zona','fl-regione','fl-ateneo','fl-tipologia','fl-classe','fl-aa'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    LM.choicesMap[id] = new Choices(el, {
+      removeItemButton: true, searchEnabled: true,
+      searchPlaceholderValue: 'Cerca...', itemSelectText: '',
+      noResultsText: 'Nessun risultato',
+      noChoicesText: 'Nessuna opzione disponibile',
+      placeholder: true, placeholderValue: '— Tutti —',
+      shouldSort: false,
+    });
+  });
+}
+
+// ── Popola filtri da lauree ──────────────────────────────────────
+async function popolaFiltriLauree(conn) {
+
+  // Colonne semplici
+  const fillSemplice = async (id, col) => {
+    const res = await conn.query(
+      `SELECT DISTINCT ${col} FROM lauree
+       WHERE ${col} IS NOT NULL AND CAST(${col} AS VARCHAR) != ''
+       ORDER BY ${col}`
+    );
+    const ch   = LM.choicesMap[id];
+    const voci = res.toArray()
+      .map(r => String(Object.values(r)[0]))
+      .filter(v => v && v !== 'null');
+    if (ch) {
+      ch.setChoices(voci.map(v => ({ value: v, label: v })), 'value', 'label', true);
+    }
+  };
+
+  await fillSemplice('fl-zona',      'zona');
+  await fillSemplice('fl-regione',   'regione');
+  await fillSemplice('fl-ateneo',    'ateneo');
+  await fillSemplice('fl-tipologia', 'tipologia');
+  await fillSemplice('fl-aa',        'anno_acc');
+
+  // Classe: codice + nome
+   // Classe: nome da lauree.csv + codice da classi_lookup.json
+  // Stesso pattern usato da popolaFiltri() nel modulo principale
+  let lookupClassiL = {};
+  try {
+    const rispLookup = await fetch('classi_lookup.json');
+    lookupClassiL = await rispLookup.json();
+  } catch(e) {
+    console.warn('[tab-lauree] classi_lookup.json non trovato:', e);
+    lookupClassiL = {};
+  }
+
+  function ordinaCodiceL(codice) {
+    if (!codice) return 'ZZZ';
+    const pesi = {'L-':'1','L/':'2','LM-':'3','LM/':'4','LMG':'5','LMR':'6'};
+    let p = '9';
+    for (const [pfx, v] of Object.entries(pesi)) {
+      if (codice.startsWith(pfx)) { p = v; break; }
+    }
+    return p + String(parseInt(codice.replace(/[^0-9]/g,'')) || 999).padStart(4,'0');
+  }
+
+  const resC = await conn.query(
+    `SELECT DISTINCT nome_classe FROM lauree
+     WHERE nome_classe IS NOT NULL AND nome_classe != ''
+     ORDER BY nome_classe`
+  );
+  const chC   = LM.choicesMap['fl-classe'];
+  const vociC = [];
+  resC.toArray().forEach(r => {
+    const nome   = String(r.nome_classe ?? '').trim();
+    if (!nome || nome === 'null') return;
+    const codice = lookupClassiL[nome.toLowerCase()] || '';
+    vociC.push({ nome, codice, sort: ordinaCodiceL(codice) });
+  });
+  vociC.sort((a, b) => a.sort.localeCompare(b.sort));
+
+  if (chC) {
+    chC.setChoices(
+      vociC.map(({ nome, codice }) => ({
+        value: nome,
+        label: codice ? `${codice} · ${nome}` : nome,
+      })),
+      'value', 'label', true
+    );
+  }
+}
+
+// ── WHERE clause ─────────────────────────────────────────────────
+function buildWhereLauree() {
+  const clauses = [];
+
+  const testo = (document.getElementById('fl-laurea')?.value ?? '').trim();
+  if (testo) {
+    const gruppiOR = testo.split(',').map(g => g.trim()).filter(g => g);
+    const orClauses = gruppiOR.map(gruppo => {
+      const parole = gruppo.split(/\s+/).filter(p => p);
+      if (parole.length === 1)
+        return `lower(l.laurea) LIKE '%${parole[0].toLowerCase().replace(/'/g,"''")}%'`;
+      return '(' + parole.map(p =>
+        `lower(l.laurea) LIKE '%${p.toLowerCase().replace(/'/g,"''")}%'`
+      ).join(' AND ') + ')';
+    });
+    clauses.push(orClauses.length === 1
+      ? orClauses[0] : '(' + orClauses.join(' OR ') + ')');
+  }
+
+  const c1 = inClauseL('l.zona',        getValsL('fl-zona'));
+  const c2 = inClauseL('l.regione',     getValsL('fl-regione'));
+  const c3 = inClauseL('l.ateneo',      getValsL('fl-ateneo'));
+  const c4 = inClauseL('l.tipologia',   getValsL('fl-tipologia'));
+  const c5 = inClauseL('l.nome_classe', getValsL('fl-classe'));
+  const c6 = inClauseL('l.anno_acc',    getValsL('fl-aa'));
+  [c1,c2,c3,c4,c5,c6].forEach(c => { if (c) clauses.push(c); });
+
+  if (document.getElementById('fl-chk-isc')?.checked)
+    clauses.push(`TRY_CAST(l.isc_totali AS INTEGER) > 0`);
+
+  return clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+}
+
+// ── DataTable lauree ─────────────────────────────────────────────
+function inizializzaTabellaLauree() {
+  LM.dtTable = $('#tabella-lauree').DataTable({
+    data: [],
+    columns: [
+      { title: 'A.A.',    data: 'anno_acc',   width: '68px' },
+      { title: 'Ateneo',  data: 'ateneo' },
+      { title: 'Corso di laurea', data: 'laurea',
+        render: v => `<strong>${escH(v)}</strong>` },
+      { title: 'Tipologia', data: 'tipologia',
+        render: v => badgeTipo(v) },
+      { title: 'Durata',  data: 'durata', width: '60px',
+        render: v => (v && v !== 'null') ? `${v} a.` : '—' },
+      { title: 'Classe',  data: 'codice_classe',
+        render: (v, _, row) => {
+          // Prova codice_classe dal CSV, altrimenti lookup da classi_lookup.json
+          const lookup  = LM.lookupClassi || {};
+          const codice  = (v && v !== 'null' && v !== '')
+            ? v
+            : (lookup[(row.nome_classe||'').toLowerCase()] || '');
+          const cod  = codice ? `<strong>${escH(codice)}</strong>` : '';
+          const nome = (row.nome_classe && row.nome_classe !== 'null')
+            ? `<span title="${escH(row.nome_classe)}"
+                    style="color:#666;font-size:0.78rem;margin-left:4px">
+                ${escH(row.nome_classe)}</span>` : '';
+          return cod ? cod + nome : nome || '—';
+        }
+      },
+        { title: 'Regione', data: 'regione' },
+      { title: '1° anno',    data: 'isc_1anno',
+        render: v => pillIsc(v), className: 'dt-center' },
+      { title: 'Tot. iscritti', data: 'isc_totali',
+        render: v => pillIsc(v), className: 'dt-center' },
+      { title: '🔗', data: 'url_corso', orderable: false, width: '30px',
+        render: (v, _, row) => {
+          // Usa URL aggiornato da localStorage se presente
+          const urlEff = (window.__muLaureeGetUrl
+            ? window.__muLaureeGetUrl(row) : null) || v;
+          return (urlEff && urlEff !== 'null' && urlEff !== '' && urlEff !== 'NA')
+            ? `<a href="${escH(urlEff)}" target="_blank" class="link-ins"
+                  title="Scheda ufficiale corso">🔗</a>` : '';
+        }
+      },
+      { title: '✏️', data: null, orderable: false, width: '36px',
+        render: () => `<button class="btn-edit-url"
+                         style="background:none;border:1px solid #1e40af;color:#1e40af;
+                                padding:2px 7px;border-radius:4px;cursor:pointer;
+                                font-size:0.75rem;font-weight:600;"
+                         title="Aggiorna URL corso">✏️</button>` },
+      { title: '📚', data: null, orderable: false, width: '36px',
+        render: () => `<button class="btn-piano"
+                         title="Mostra insegnamenti del corso">📚</button>` },
+    ],
+        pageLength: 25,
+    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json' },
+    dom: 'rtip',
+    searching: false,
+    order: [[1,'asc'],[2,'asc']],
+    createdRow(row, data) {
+      $(row).css('cursor','pointer');
+      $(row).on('click', function(e) {
+        if ($(e.target).closest('a').length) return;
+        apriModaleInsegnamentiLaurea(data);
+      });
+       $(row).find('.btn-edit-url').on('click', function(e) {
+        e.stopPropagation();
+        apriModaleEditUrlLaurea(data);
+      });
+      $(row).find('.btn-piano').on('click', function(e) {
+        e.stopPropagation();
+        apriModaleInsegnamentiLaurea(data);
+      });
+    }
+  });
+}
+
+// ── Ricerca ──────────────────────────────────────────────────────
+async function eseguiRicercaLauree() {
+  const conn = window.__muConn;
+  if (!conn) { mostraToastL('⚠️ Database non ancora pronto, attendi…','#e65100'); return; }
+
+  document.getElementById('status-lauree').textContent = 'Ricerca in corso…';
+  const where = buildWhereLauree();
+
+  const sql = `
+    SELECT
+      COALESCE(CAST(l.anno_acc   AS VARCHAR), '')  AS anno_acc,
+      COALESCE(l.id_ateneo,  '')                   AS id_ateneo,
+      COALESCE(l.id_laurea,  '')                   AS id_laurea,
+      COALESCE(l.zona,       '')                   AS zona,
+      COALESCE(l.regione,    '')                   AS regione,
+      COALESCE(l.ateneo,     '')                   AS ateneo,
+      COALESCE(l.tipologia,  '')                   AS tipologia,
+      COALESCE(CAST(l.durata AS VARCHAR), '')       AS durata,
+      COALESCE(l.laurea,     '')                   AS laurea,
+      COALESCE(
+        CASE WHEN l.codice_classe IS NULL 
+              OR l.codice_classe = '' 
+              OR l.codice_classe = 'NA' 
+             THEN NULL 
+             ELSE l.codice_classe 
+        END,
+        cl.codice_classe,
+        ''
+      )                                            AS codice_classe,
+      COALESCE(l.nome_classe,   '')                AS nome_classe,
+      COALESCE(CAST(l.isc_1anno  AS VARCHAR), '')  AS isc_1anno,
+      COALESCE(CAST(l.isc_totali AS VARCHAR), '')  AS isc_totali,
+      COALESCE(l.url_corso, '')                    AS url_corso
+    FROM lauree l
+    LEFT JOIN classi_lookup_tbl cl
+      ON lower(trim(l.nome_classe)) = cl.nome_classe_key
+    ${where}
+      ORDER BY l.ateneo, l.laurea
+    LIMIT 3000
+  `;
+
+  try {
+    const result = await conn.query(sql);
+    const rows   = result.toArray().map(r => {
+      const obj = {};
+      Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+      // Arricchisce codice_classe dal lookup se mancante nel CSV
+      if (!obj.codice_classe || obj.codice_classe === 'null' || obj.codice_classe === '') {
+        obj.codice_classe = LM.lookupClassi[(obj.nome_classe||'').toLowerCase().trim()] || '';
+      }
+      return obj;
+    });
+    LM.ultimiRisultati = rows;
+    LM.dtTable.clear().rows.add(rows).draw();
+
+    const totQ = await conn.query(
+      `SELECT COUNT(*) AS n FROM lauree l ${where}`
+    );
+    const tot = Number(totQ.toArray()[0].n);
+    document.getElementById('contatore-lauree').innerHTML =
+      `<strong>${tot.toLocaleString('it-IT')}</strong> corsi di laurea trovati` +
+      (tot > 3000
+        ? ' <span style="color:#e65100;font-size:0.82rem">(mostrati i primi 3.000)</span>' : '');
+
+    document.getElementById('btn-export-lauree').disabled = rows.length === 0;
+    document.getElementById('status-lauree').textContent = 'Pronto';
+
+  } catch(e) {
+    console.error('[tab-lauree]', e);
+    document.getElementById('status-lauree').textContent = 'Errore nella query';
+  }
+}
+
+// ── Modale insegnamenti ──────────────────────────────────────────
+async function apriModaleInsegnamentiLaurea(riga) {
+  const overlay = document.getElementById('modal-laurea-overlay');
+  const body    = document.getElementById('modal-laurea-body');
+  const conn    = window.__muConn;
+
+  document.getElementById('modal-laurea-titolo').textContent      = riga.laurea || '—';
+  document.getElementById('modal-laurea-sottotitolo').textContent =
+    `${riga.ateneo} · ${riga.tipologia} · A.A. ${riga.anno_acc}`;
+
+  body.innerHTML = '<div class="loading">⏳ Caricamento insegnamenti…</div>';
+  overlay.classList.add('aperto');
+
+  if (!conn) {
+    body.innerHTML = '<p style="color:red;padding:20px">Database non disponibile.</p>';
+    return;
+  }
+
+  try {
+    // JOIN preciso su id_laurea se disponibile, altrimenti fallback su ateneo+laurea
+    const useId = riga.id_laurea && riga.id_laurea !== '';
+    const sql = useId
+      ? `SELECT
+           CAST(i.anno_ins AS VARCHAR)                       AS anno_ins,
+           i.insegnamento,
+           COALESCE(i.ssd, '')                               AS ssd,
+           CAST(MAX(TRY_CAST(i.cfu AS DOUBLE)) AS VARCHAR)   AS cfu,
+           COALESCE(STRING_AGG(DISTINCT
+             COALESCE(i.curriculum_lista,''), ' · '), '')     AS curriculum_lista,
+           COALESCE(MAX(COALESCE(i.trasversale,'')), '')      AS trasversale,
+           COALESCE(MAX(COALESCE(i.url_ins,'')), '')          AS url_ins,
+           COALESCE(MAX(COALESCE(
+             CAST(i.n_curriculum AS VARCHAR),'')), '1')       AS n_curriculum
+         FROM insegnamenti i
+         WHERE i.id_laurea = '${riga.id_laurea.replace(/'/g,"''")}'
+         GROUP BY i.anno_ins, i.insegnamento, i.ssd
+         ORDER BY TRY_CAST(i.anno_ins AS INTEGER), i.insegnamento`
+      : `SELECT
+           CAST(anno_ins AS VARCHAR)                          AS anno_ins,
+           insegnamento,
+           COALESCE(ssd, '')                                  AS ssd,
+           CAST(MAX(TRY_CAST(cfu AS DOUBLE)) AS VARCHAR)      AS cfu,
+           COALESCE(STRING_AGG(DISTINCT
+             COALESCE(curriculum_lista,''), ' · '), '')        AS curriculum_lista,
+           COALESCE(MAX(COALESCE(trasversale,'')), '')         AS trasversale,
+           COALESCE(MAX(COALESCE(url_ins,'')), '')             AS url_ins,
+           COALESCE(MAX(COALESCE(
+             CAST(n_curriculum AS VARCHAR),'')), '1')          AS n_curriculum
+         FROM insegnamenti
+         WHERE ateneo = '${riga.ateneo.replace(/'/g,"''")}'
+           AND laurea = '${riga.laurea.replace(/'/g,"''")}'
+         GROUP BY anno_ins, insegnamento, ssd
+         ORDER BY TRY_CAST(anno_ins AS INTEGER), insegnamento`;
+
+    const res  = await conn.query(sql);
+    let ins = res.toArray().map(r => {
+      const obj = {};
+      Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+      return obj;
+    });
+
+    // Applica modifiche/disattivazioni locali se disponibili
+    if (typeof window.__muApplicaModifiche === 'function') {
+      ins = window.__muApplicaModifiche(ins);
+    }
+
+    // Scheda riepilogativa
+    const totIns = ins.filter(r => !r._disattivato).length;
+    const totCfu = ins.filter(r => !r._disattivato)
+      .reduce((s,r) => s + (parseFloat(r.cfu)||0), 0);
+
+    let html = `
+    <div class="laurea-scheda">
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Ateneo</span>
+        <span class="ls-val">${escH(riga.ateneo)}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Classe</span>
+        <span class="ls-val">${escH(riga.codice_classe)} · ${escH(riga.nome_classe)}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Tipologia</span>
+        <span class="ls-val">${badgeTipo(riga.tipologia)}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Durata</span>
+        <span class="ls-val">${riga.durata ? riga.durata+' anni' : '—'}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Iscr. 1° anno</span>
+        <span class="ls-val">${pillIsc(riga.isc_1anno)}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Iscr. Totali</span>
+        <span class="ls-val">${pillIsc(riga.isc_totali)}</span>
+      </div>
+      <div class="laurea-scheda-item">
+        <span class="ls-label">Insegnamenti attivi</span>
+        <span class="ls-val">${totIns} · ${totCfu} CFU</span>
+      </div>
+      ${riga.url_corso && riga.url_corso !== 'NA' && riga.url_corso !== ''
+        ? `<div class="laurea-scheda-item">
+             <span class="ls-label">Scheda ufficiale</span>
+             <span class="ls-val">
+               <a href="${escH(riga.url_corso)}" target="_blank"
+                  style="color:#1e40af;font-weight:700;text-decoration:none;">
+                 🔗 Apri →</a>
+             </span>
+           </div>` : ''}
+    </div>`;
+
+    if (!ins.length) {
+      html += `<p style="color:#999;padding:20px;text-align:center;">
+        ⚠️ Nessun insegnamento trovato per questo corso.<br>
+        <small>Verifica che id_laurea sia presente in insegnamenti.csv</small>
+      </p>`;
+      body.innerHTML = html;
+      return;
+    }
+
+    // Raggruppa per anno e genera tabelle
+    const perAnno = {};
+    ins.forEach(r => {
+      const a = (r.anno_ins||'?').replace('.0','');
+      if (!perAnno[a]) perAnno[a] = [];
+      perAnno[a].push(r);
+    });
+    const etichette = {
+      '1':'1° anno','2':'2° anno','3':'3° anno',
+      '4':'4° anno','5':'5° anno','6':'6° anno',
+      '?':'Anno non specificato'
+    };
+
+    Object.keys(perAnno).sort((a,b) => {
+      if (a==='?') return 1; if (b==='?') return -1;
+      return parseInt(a)-parseInt(b);
+    }).forEach(anno => {
+      const righe  = perAnno[anno];
+      const attivi = righe.filter(r => !r._disattivato);
+      const cfuA   = attivi.reduce((s,r)=>s+(parseFloat(r.cfu)||0),0);
+
+      html += `<div class="anno-block">
+        <h4>${etichette[anno]||anno+'° anno'}
+          <span style="font-weight:400;color:#888;font-size:0.8rem;">
+            — ${attivi.length} ins. · ${cfuA} CFU</span>
+        </h4>
+        <table class="piano-table">
+          <thead><tr>
+            <th>Insegnamento</th><th>SSD</th><th>CFU</th>
+            <th>Curriculum</th><th>Link</th>
+          </tr></thead>
+          <tbody>`;
+
+      righe.forEach(r => {
+        const modI  = r._modificato
+          ? '<span title="Modificato localmente" style="margin-left:4px">🔄</span>' : '';
+        const disI  = r._disattivato
+          ? `<span class="badge-disattivato"
+                   title="${escH(r._motivo_dis||'')}">⛔ non attivo</span>` : '';
+        const link  = (r.url_ins && r.url_ins !== 'NA'
+                       && r.url_ins !== 'null' && r.url_ins !== '')
+          ? `<a href="${escH(r.url_ins)}" target="_blank"
+                style="color:#1e40af;">🔗</a>` : '';
+        const trCls = r._disattivato ? ' class="riga-dis"' : '';
+        const trSty = (r._modificato && !r._disattivato)
+          ? ' style="background:#fffbe6"' : '';
+        const curr  = window.renderCurriculum
+          ? window.renderCurriculum(r)
+          : `<span class="badge-curr-unico">${escH(r.curriculum_lista||'unico')}</span>`;
+
+        html += `<tr${trCls}${trSty}>
+          <td>${escH(r.insegnamento)}${modI}${disI}</td>
+          <td>${escH(r.ssd)}</td>
+          <td>${escH(r.cfu)}</td>
+          <td>${curr}</td>
+          <td>${link}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    });
+
+    body.innerHTML = html;
+
+  } catch(e) {
+    console.error('[tab-lauree] modale:', e);
+    body.innerHTML =
+      '<p style="color:red;padding:20px">Errore nel caricamento degli insegnamenti.</p>';
+  }
+}
+// ── Chiave localStorage per URL lauree aggiornati ────────────────
+const LS_KEY_URL_LAUREE = 'myuniversity_url_lauree_v1';
+
+function leggiUrlLauree() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY_URL_LAUREE) || '{}'); }
+  catch(e) { return {}; }
+}
+function salvaUrlLauree(obj) {
+  localStorage.setItem(LS_KEY_URL_LAUREE, JSON.stringify(obj));
+}
+function chiaveLaurea(row) {
+  return row.id_laurea && row.id_laurea !== ''
+    ? `id::${row.id_laurea}`
+    : `${(row.ateneo||'').trim()}||${(row.laurea||'').trim()}||${(row.anno_acc||'').trim()}`;
+}
+
+window.__muLaureeGetUrl = function(row) {
+  let urls = leggiUrlLauree();
+  return urls[chiaveLaurea(row)] || null;
+};
+
+let _editUrlRowCorrente = null;
+
+function apriModaleEditUrlLaurea(row) {
+  _editUrlRowCorrente = row;
+  let urls    = leggiUrlLauree();
+  const chiave  = chiaveLaurea(row);
+  const urlAtt  = urls[chiave] || row.url_corso || '';
+  const urlOrig = row.url_corso || '';
+
+  let ov = document.getElementById('modal-edit-url-laurea-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'modal-edit-url-laurea-overlay';
+    ov.style.cssText = [
+      'display:none','position:fixed','inset:0',
+      'background:rgba(0,0,0,0.5)','z-index:1500',
+      'justify-content:center','align-items:flex-start',
+      'padding:40px 16px','overflow-y:auto'
+    ].join(';');
+    ov.innerHTML = `
+      <div style="background:white;border-radius:12px;width:100%;max-width:580px;
+                  box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden;margin:auto;">
+        <div style="background:#1e40af;color:white;padding:18px 24px;
+                    display:flex;justify-content:space-between;
+                    align-items:flex-start;gap:12px;">
+          <div>
+            <div id="eul-titolo"
+                 style="font-size:1rem;font-weight:700;line-height:1.4;"></div>
+            <div id="eul-sub"
+                 style="font-size:0.82rem;opacity:0.85;margin-top:3px;"></div>
+          </div>
+          <button id="eul-x"
+                  style="background:rgba(255,255,255,0.25);color:white;border:none;
+                         border-radius:6px;padding:6px 14px;cursor:pointer;
+                         font-size:0.9rem;font-weight:700;">✕</button>
+        </div>
+        <div style="padding:24px;">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;
+                      padding:12px 16px;margin-bottom:18px;font-size:0.82rem;
+                      color:#1e40af;line-height:1.6;">
+            ℹ️ L'URL aggiornato viene salvato <strong>in locale</strong> (localStorage)
+            ed è incluso nell'<strong>Export delta</strong> per la condivisione
+            con i colleghi. Il link originale MUR rimane come riferimento.
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:0.72rem;font-weight:700;color:#555;
+                          text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">
+              URL originale MUR 2022/23
+            </label>
+            <div id="eul-orig"
+                 style="padding:8px 10px;background:#f5f5f5;border:1px solid #eee;
+                        border-radius:6px;font-size:0.82rem;color:#888;
+                        word-break:break-all;min-height:34px;"></div>
+          </div>
+          <div style="margin-bottom:18px;">
+            <label style="display:block;font-size:0.72rem;font-weight:700;color:#555;
+                          text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">
+              URL aggiornato ✏️
+            </label>
+            <input id="eul-input" type="url"
+                   placeholder="https://www.ateneo.it/corso/..."
+                   style="width:100%;padding:9px 10px;border:2px solid #1e40af;
+                          border-radius:6px;font-size:0.9rem;font-family:inherit;
+                          box-sizing:border-box;">
+            <div id="eul-preview" style="margin-top:6px;font-size:0.75rem;"></div>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;
+                      padding:9px 14px;font-size:0.78rem;color:#92400e;margin-bottom:18px;">
+            💡 Cerca il corso su
+            <a href="https://universitaly.it" target="_blank"
+               style="color:#1e40af;">universitaly.it</a>
+            oppure sul sito dell'ateneo.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+            <button id="eul-rimuovi"
+                    style="background:#fee2e2;color:#991b1b;border:none;
+                           border-radius:6px;padding:9px 16px;cursor:pointer;
+                           font-size:0.85rem;font-weight:600;">
+              🗑️ Rimuovi aggiornamento
+            </button>
+            <button id="eul-ann"
+                    style="background:#eee;color:#555;border:none;
+                           border-radius:6px;padding:9px 16px;cursor:pointer;
+                           font-size:0.85rem;font-weight:600;">
+              Annulla
+            </button>
+            <button id="eul-salva"
+                    style="background:#1e40af;color:white;border:none;
+                           border-radius:6px;padding:9px 16px;cursor:pointer;
+                           font-size:0.85rem;font-weight:600;">
+              💾 Salva URL
+            </button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+
+    document.getElementById('eul-x').onclick   = chiudiModaleEditUrl;
+    document.getElementById('eul-ann').onclick  = chiudiModaleEditUrl;
+    ov.addEventListener('click', e => {
+      if (e.target === ov) chiudiModaleEditUrl();
+    });
+
+    document.getElementById('eul-input').addEventListener('input', function() {
+      const v    = this.value.trim();
+      const prev = document.getElementById('eul-preview');
+      if (v && (v.startsWith('http://') || v.startsWith('https://'))) {
+        prev.innerHTML =
+          `<a href="${escH(v)}" target="_blank"
+              style="color:#1e40af;">🔗 Testa il link →</a>`;
+      } else if (v) {
+        prev.innerHTML =
+          `<span style="color:#e65100;">
+             ⚠️ URL non valido (deve iniziare con https://)</span>`;
+      } else {
+        prev.innerHTML = '';
+      }
+    });
+
+    document.getElementById('eul-salva').onclick = () => {
+      if (!_editUrlRowCorrente) return;
+      const nuovoUrl = document.getElementById('eul-input').value.trim();
+      if (!nuovoUrl) { alert('Inserisci un URL valido.'); return; }
+      if (!nuovoUrl.startsWith('http')) {
+        alert('L\'URL deve iniziare con http:// o https://'); return;
+      }
+      let urlsSalva = leggiUrlLauree();
+      urlsSalva[chiaveLaurea(_editUrlRowCorrente)] = nuovoUrl;
+      salvaUrlLauree(urlsSalva);
+      aggiornaBadgeHeaderLauree();
+      chiudiModaleEditUrl();
+      if (LM.dtTable) LM.dtTable.rows().invalidate().draw(false);
+      mostraToastL(`✅ URL aggiornato per "${_editUrlRowCorrente.laurea}"`);
+    };
+
+    document.getElementById('eul-rimuovi').onclick = () => {
+      if (!_editUrlRowCorrente) return;
+      if (!confirm('Vuoi rimuovere l\'URL aggiornato e tornare all\'originale MUR?')) return;
+      let urlsRimuovi = leggiUrlLauree();
+      delete urlsRimuovi[chiaveLaurea(_editUrlRowCorrente)];
+      salvaUrlLauree(urlsRimuovi);
+      aggiornaBadgeHeaderLauree();
+      chiudiModaleEditUrl();
+      if (LM.dtTable) LM.dtTable.rows().invalidate().draw(false);
+      mostraToastL('🗑️ URL aggiornamento rimosso', '#6b7280');
+    };
+  }
+
+  // Popola i campi e apri
+  document.getElementById('eul-titolo').textContent = row.laurea || '—';
+  document.getElementById('eul-sub').textContent    =
+    `${row.ateneo} · ${row.tipologia} · A.A. ${row.anno_acc}`;
+
+  const origEl = document.getElementById('eul-orig');
+  origEl.innerHTML = urlOrig && urlOrig !== 'NA'
+    ? `<a href="${escH(urlOrig)}" target="_blank"
+          style="color:#1e40af;word-break:break-all;">${escH(urlOrig)}</a>`
+    : '<em style="color:#aaa">Nessun URL nel dataset MUR 2022/23</em>';
+
+  document.getElementById('eul-input').value       = urlAtt !== 'NA' ? urlAtt : '';
+  document.getElementById('eul-preview').innerHTML = '';
+
+  let urlsCheck = leggiUrlLauree();
+  document.getElementById('eul-rimuovi').style.display =
+    urlsCheck[chiaveLaurea(row)] ? 'inline-block' : 'none';
+
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('eul-input').focus(), 100);
+}
+
+function chiudiModaleEditUrl() {
+  const ov = document.getElementById('modal-edit-url-laurea-overlay');
+  if (ov) ov.style.display = 'none';
+  document.body.style.overflow = '';
+  _editUrlRowCorrente = null;
+}
+
+function aggiornaBadgeHeaderLauree() {
+  const nUrl = Object.keys(leggiUrlLauree()).length;
+  if (typeof window.__muAggiornaBadge === 'function') {
+    window.__muAggiornaBadge();
+  }
+  const statusEl = document.getElementById('status-lauree');
+  if (statusEl && LM.pronto) {
+    statusEl.innerHTML = nUrl > 0
+      ? `Pronto · <span style="color:#1e40af;font-weight:600;">
+           ${nUrl} URL aggiornati</span>`
+      : 'Pronto';
+  }
+}
+// ── Export CSV ───────────────────────────────────────────────────
+function esportaCSVLauree() {
+  if (!LM.ultimiRisultati.length) { alert('Nessun dato da esportare.'); return; }
+  const col = [
+    'anno_acc','id_ateneo','id_laurea','zona','regione','ateneo',
+    'tipologia','durata','laurea','codice_classe','nome_classe',
+    'isc_1anno','isc_totali','url_corso'
+  ];
+  const csv = '\uFEFF' + [
+    col.join(';'),
+    ...LM.ultimiRisultati.map(row =>
+      col.map(c => {
+        const v = String(row[c] ?? '');
+        return (v.includes(';')||v.includes('"')||v.includes('\n'))
+          ? `"${v.replace(/"/g,'""')}"` : v;
+      }).join(';')
+    )
+  ].join('\r\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),
+    download: `myuniversity_lauree_${new Date().toISOString().slice(0,10)}.csv`
+  });
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+}
+
+// ── Reset filtri ─────────────────────────────────────────────────
+function resetFiltriLauree() {
+  document.getElementById('fl-laurea').value = '';
+  document.getElementById('fl-chk-isc').checked = false;
+  Object.values(LM.choicesMap).forEach(ch => ch.removeActiveItems());
+  if (LM.dtTable) LM.dtTable.clear().draw();
+  LM.ultimiRisultati = [];
+  document.getElementById('contatore-lauree').textContent =
+    'Inserisci i filtri e premi Cerca';
+  document.getElementById('btn-export-lauree').disabled = true;
+}
+
+// ── Chiusura modale ──────────────────────────────────────────────
+function chiudiModaleLaurea() {
+  document.getElementById('modal-laurea-overlay').classList.remove('aperto');
+}
+document.getElementById('btn-chiudi-laurea-modal')
+  .addEventListener('click', chiudiModaleLaurea);
+document.getElementById('modal-laurea-overlay')
+  .addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-laurea-overlay'))
+      chiudiModaleLaurea();
+  });
+
+// ── Bottoni tab ──────────────────────────────────────────────────
+document.getElementById('btn-cerca-lauree')
+  .addEventListener('click', eseguiRicercaLauree);
+document.getElementById('btn-reset-lauree')
+  .addEventListener('click', resetFiltriLauree);
+document.getElementById('btn-export-lauree')
+  .addEventListener('click', esportaCSVLauree);
+document.getElementById('fl-laurea')
+  .addEventListener('keydown', e => { if (e.key==='Enter') eseguiRicercaLauree(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') chiudiModaleLaurea();
+});
+
+// ── Inizializzazione al click sulla tab ──────────────────────────
+// Intercetta i click DOPO che il modulo principale ha già registrato
+// il proprio listener — non c'è conflitto perché questo modulo
+// gestisce SOLO l'inizializzazione della tab-lauree.
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', async function () {
+    if (this.dataset.tab !== 'tab-lauree' || LM.pronto) return;
+    document.getElementById('status-lauree').textContent = 'Inizializzazione…';
+    try {
+      const conn = await waitForConn();
+      // Carica lookup classi
+      try {
+        const r = await fetch('classi_lookup.json');
+        LM.lookupClassi = await r.json();
+        // Registra lookup come tabella DuckDB per join nella query
+      const lookupRows = Object.entries(LM.lookupClassi)
+        .map(([nome, codice]) => `('${nome.replace(/'/g,"''")}','${codice.replace(/'/g,"''")}')`)
+        .join(',');
+      if (lookupRows) {
+        await conn.query(`
+          CREATE TABLE IF NOT EXISTS classi_lookup_tbl
+          (nome_classe_key VARCHAR, codice_classe VARCHAR)
+        `);
+        await conn.query(`DELETE FROM classi_lookup_tbl`);
+        await conn.query(`
+          INSERT INTO classi_lookup_tbl VALUES ${lookupRows}
+        `);
+      }
+      } catch(e) {
+        console.warn('[tab-lauree] classi_lookup.json non trovato');
+        LM.lookupClassi = {};
+      }
+      inizializzaChoicesLauree();
+      document.getElementById('tabella-lauree-container').innerHTML =
+        '<table id="tabella-lauree" class="display" style="width:100%"></table>';
+      inizializzaTabellaLauree();
+      await popolaFiltriLauree(conn);
+      document.getElementById('status-lauree').textContent =
+        'Pronto — usa i filtri e premi Cerca';
+      LM.pronto = true;
+    } catch(err) {
+      console.error('[tab-lauree] init:', err);
+      document.getElementById('status-lauree').textContent = 'Errore inizializzazione';
+    }
+  });
+});
+</script>
 </body>
 </html>

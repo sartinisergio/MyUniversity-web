@@ -911,7 +911,9 @@
     /* STEP 1 – corso disattivato nell'albero */
     .tree-corso.corso-disattivato { opacity: 0.5; }
     .tree-corso.corso-disattivato:hover { background: #f9fafb; }
-
+     /* Livello 2: Tipologia */
+    .tree-tipologia.aperto > .tree-tipologia-children { display: block !important; }
+    .tree-tipologia.aperto > .tree-tipologia-header .freccia { transform: rotate(90deg); }
     #va-status { font-size: 0.85rem; color: #999; font-style: italic; }
     #va-contatore { font-size: 0.85rem; color: #666; }
 
@@ -953,6 +955,117 @@
       padding: 3px 10px; font-size: 0.78rem; font-weight: 600;
       margin-left: 12px; vertical-align: middle;
     }
+    /* ── BADGE CURRICULUM SINTETICO ── */
+.badge-curr {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.badge-curr:hover {
+  background: #ede9fe;
+  border-color: #a855f7;
+}
+.badge-curr-unico {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── MODALE LISTA CURRICULUM ── */
+#modal-curr-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1300;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 16px;
+}
+#modal-curr-overlay.aperto { display: flex; }
+#modal-curr-box {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  overflow: hidden;
+}
+#modal-curr-header {
+  background: #6b21a8;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+#modal-curr-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+#modal-curr-header p {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-top: 3px;
+}
+#btn-chiudi-curr {
+  background: rgba(255,255,255,0.25);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 11px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+#btn-chiudi-curr:hover { background: rgba(255,255,255,0.4); }
+#modal-curr-body {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.curr-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.curr-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+.curr-list li:last-child { border-bottom: none; }
+.curr-list li:hover { background: #faf5ff; }
+.curr-list li::before {
+  content: "◈";
+  color: #a855f7;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
   </style>
 </head>
 <body>
@@ -1891,7 +2004,7 @@
         { title: 'A.',  data: 'anno_ins' },
         { title: 'CFU', data: 'cfu' },
         { title: 'Curriculum', data: 'n_curriculum',
-          render: (v, _, row) => v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista },
+              render: (v, _, row) => window.renderCurriculum ? window.renderCurriculum(row) : (v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista) },
         { title: 'Link', data: 'url_ins',
           render: v => v && v !== 'NA' && v !== 'null' && v !== ''
             ? `<a class="link-ins" href="${v}" target="_blank">🔗</a>` : '' },
@@ -2665,8 +2778,9 @@
             </tr></thead>
             <tbody>`;
         ins.forEach(r => {
-          const trasv  = (r.trasversale === '1' || r.trasversale === 'true')
-            ? '<span class="badge-trasv">trasversale</span>' : '';
+          const trasv = (r.trasversale === 'trasversale')
+          ? renderCurriculum(r) : 
+          `<span class="badge-curr-unico">${r.curriculum_lista || 'unico'}</span>`;
           const modIcn = r._modificato
             ? '<span title="Modificato localmente" style="margin-left:4px">🔄</span>' : '';
           const zanIcn = r._aggiunto
@@ -2681,7 +2795,7 @@
             <td>${escHtml(r.insegnamento)}${trasv}${modIcn}${zanIcn}${disIcn}</td>
             <td>${escHtml(r.ssd)}</td>
             <td>${escHtml(r.cfu)}</td>
-            <td>${escHtml(r.curriculum_lista || '')}</td>
+            <td>${renderCurriculum(r)}</td>
             <td>${link}</td>
           </tr>`;
         });
@@ -2751,7 +2865,7 @@
         FROM insegnamenti
         WHERE ateneo IS NOT NULL AND laurea IS NOT NULL
         GROUP BY ateneo, nome_classe, tipologia, laurea
-        ORDER BY ateneo, nome_classe, laurea
+        ORDER BY ateneo, tipologia, nome_classe, laurea
       `;
       const res  = await conn.query(sql);
       const rows = res.toArray().map(r => ({
@@ -2779,18 +2893,30 @@
       });
 
       const dis = leggiDisattivazioni();
+
+      // Struttura: ateneo → tipologia → classe → corsi
+      const ordTipologia = { 'triennale': 1, 'magistrale': 2, 'ciclo unico': 3 };
       const map = {};
+
       rows.forEach(r => {
-        if (!map[r.ateneo]) map[r.ateneo] = { classi: {}, n_ins: 0, tot_cfu: 0 };
+        if (!map[r.ateneo]) map[r.ateneo] = { tipologie: {}, n_ins: 0, tot_cfu: 0 };
         map[r.ateneo].n_ins   += r.n_ins;
         map[r.ateneo].tot_cfu += r.tot_cfu;
+
+        const tip = r.tipologia || 'altra';
+        if (!map[r.ateneo].tipologie[tip])
+          map[r.ateneo].tipologie[tip] = { classi: {}, n_ins: 0, tot_cfu: 0 };
+        map[r.ateneo].tipologie[tip].n_ins   += r.n_ins;
+        map[r.ateneo].tipologie[tip].tot_cfu += r.tot_cfu;
+
         const cls = r.nome_classe;
-        if (!map[r.ateneo].classi[cls]) map[r.ateneo].classi[cls] = { corsi: [], n_ins: 0, tot_cfu: 0 };
-        map[r.ateneo].classi[cls].n_ins   += r.n_ins;
-        map[r.ateneo].classi[cls].tot_cfu += r.tot_cfu;
+        if (!map[r.ateneo].tipologie[tip].classi[cls])
+          map[r.ateneo].tipologie[tip].classi[cls] = { corsi: [], n_ins: 0, tot_cfu: 0 };
+        map[r.ateneo].tipologie[tip].classi[cls].n_ins   += r.n_ins;
+        map[r.ateneo].tipologie[tip].classi[cls].tot_cfu += r.tot_cfu;
 
         const kc = chiaveCorso(r.ateneo, r.laurea);
-        map[r.ateneo].classi[cls].corsi.push({
+        map[r.ateneo].tipologie[tip].classi[cls].corsi.push({
           laurea:       r.laurea,
           tipologia:    r.tipologia,
           n_ins:        r.n_ins,
@@ -2804,23 +2930,32 @@
       alberoCompleto = Object.entries(map)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([nomeAteneo, datiAteneo]) => ({
-          ateneo:  nomeAteneo,
-          n_ins:   datiAteneo.n_ins,
-          tot_cfu: datiAteneo.tot_cfu,
-          classi:  Object.entries(datiAteneo.classi)
-            .sort((a, b) => ordinaCodiceClasse(a[0]) - ordinaCodiceClasse(b[0]))
-            .map(([nomeClasse, datiClasse]) => ({
-              classe:  nomeClasse,
-              n_ins:   datiClasse.n_ins,
-              tot_cfu: datiClasse.tot_cfu,
-              corsi:   datiClasse.corsi.sort((a, b) => a.laurea.localeCompare(b.laurea)),
+          ateneo:    nomeAteneo,
+          n_ins:     datiAteneo.n_ins,
+          tot_cfu:   datiAteneo.tot_cfu,
+          tipologie: Object.entries(datiAteneo.tipologie)
+            .sort((a, b) => (ordTipologia[a[0]] || 9) - (ordTipologia[b[0]] || 9))
+            .map(([nomeTip, datiTip]) => ({
+              tipologia: nomeTip,
+              n_ins:     datiTip.n_ins,
+              tot_cfu:   datiTip.tot_cfu,
+              classi:    Object.entries(datiTip.classi)
+                .sort((a, b) => ordinaCodiceClasse(a[0]) - ordinaCodiceClasse(b[0]))
+                .map(([nomeClasse, datiClasse]) => ({
+                  classe:  nomeClasse,
+                  n_ins:   datiClasse.n_ins,
+                  tot_cfu: datiClasse.tot_cfu,
+                  corsi:   datiClasse.corsi.sort((a, b) => a.laurea.localeCompare(b.laurea)),
+                }))
             }))
         }));
 
       renderAlbero(alberoCompleto);
+      const totCorsi = rows.length;
       document.getElementById('va-contatore').textContent =
-        `${alberoCompleto.length} atenei · ${rows.length} corsi di laurea`;
+        `${alberoCompleto.length} atenei · ${totCorsi} corsi di laurea`;
       document.getElementById('va-status').textContent = 'Pronto';
+
     } catch(e) {
       console.error(e);
       document.getElementById('va-status').textContent = 'Errore';
@@ -2835,12 +2970,18 @@
       container.innerHTML = '<p style="color:#999;padding:20px">Nessun dato.</p>';
       return;
     }
+
+    const icone = { triennale: '📘', magistrale: '📙', 'ciclo unico': '📗' };
+    const colori = { triennale: '#1a5fa8', magistrale: '#e65100', 'ciclo unico': '#2e7d32' };
+    const etichette = { triennale: 'Lauree Triennali', magistrale: 'Lauree Magistrali', 'ciclo unico': 'Lauree Magistrali a Ciclo Unico' };
+
     const tipoBadgeClass = t => {
-      const m = {'triennale':'badge-triennale','magistrale':'badge-magistrale','ciclo unico':'badge-ciclo_unico'};
-      return m[(t||'').toLowerCase()] || 'badge-triennale';
+      const m = { triennale: 'badge-triennale', magistrale: 'badge-magistrale', 'ciclo unico': 'badge-ciclo_unico' };
+      return m[(t || '').toLowerCase()] || 'badge-triennale';
     };
 
     let html = '<div class="tree">';
+
     dati.forEach(a => {
       html += `
         <div class="tree-ateneo tree-node" data-ateneo="${escHtml(a.ateneo)}">
@@ -2850,34 +2991,63 @@
             <span class="badge-stat">${a.n_ins.toLocaleString('it-IT')} ins. · ${a.tot_cfu.toLocaleString('it-IT')} CFU</span>
           </div>
           <div class="tree-ateneo-children">`;
-      a.classi.forEach(cl => {
-        const codiceClasse = lookupClassi[(cl.classe||'').toLowerCase()] || '';
+
+      a.tipologie.forEach(tip => {
+        const colore = colori[tip.tipologia] || '#555';
+        const icona  = icone[tip.tipologia]  || '📄';
+        const etich  = etichette[tip.tipologia] || tip.tipologia;
+        const nCorsi = tip.classi.reduce((s, cl) => s + cl.corsi.length, 0);
+
         html += `
-            <div class="tree-classe tree-node">
-              <div class="tree-classe-header" onclick="toggleNodo(this)">
-                <span class="freccia">▶</span>
-                <span>${codiceClasse ? codiceClasse + ' · ' : ''}${escHtml(cl.classe)}</span>
-                <span class="badge-stat-classe">${cl.n_ins} ins. · ${cl.tot_cfu} CFU</span>
+            <div class="tree-tipologia tree-node">
+              <div class="tree-tipologia-header" onclick="toggleNodo(this)" style="
+                display:flex; align-items:center; gap:8px;
+                padding:9px 16px; margin: 6px 16px 0 16px;
+                background:#f8f8f8; border:1px solid #e0e0e0;
+                border-radius:6px; cursor:pointer; user-select:none;
+                font-weight:700; font-size:0.85rem; color:${colore};">
+                <span class="freccia" style="font-size:0.72rem;transition:transform 0.2s;color:${colore}">▶</span>
+                <span>${icona} ${etich}</span>
+                <span style="margin-left:auto;background:${colore};color:white;border-radius:20px;padding:1px 10px;font-size:0.72rem;font-weight:600;">
+                  ${nCorsi} cors${nCorsi === 1 ? 'o' : 'i'} · ${tip.tot_cfu.toLocaleString('it-IT')} CFU
+                </span>
               </div>
-              <div class="tree-classe-children">`;
-        cl.corsi.forEach(corso => {
-          const zanBadge = corso._zanCorso
-            ? '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af;margin-left:4px">ZAN</span>' : '';
-          const disBadge = corso._disattivato
-            ? `<span class="badge-disattivato" title="${escHtml(corso._motivo_dis)}">⛔</span>` : '';
-          const corsoCls = corso._disattivato ? ' corso-disattivato' : '';
+              <div class="tree-tipologia-children" style="display:none;">`;
+
+        tip.classi.forEach(cl => {
+          const codiceClasse = lookupClassi[(cl.classe || '').toLowerCase()] || '';
           html += `
-                <div class="tree-corso${corsoCls}"
-                     onclick="apriPianoFromTree('${escHtml(a.ateneo).replace(/'/g,"\\'")}','${escHtml(corso.laurea).replace(/'/g,"\\'")}','${escHtml(corso.tipologia).replace(/'/g,"\\'")}')">
-                  <span class="badge badge-tipo ${tipoBadgeClass(corso.tipologia)}">${escHtml(corso.tipologia)}</span>
-                  <span>${escHtml(corso.laurea)}${zanBadge}${disBadge}</span>
-                  <span class="stat-corso">${corso.n_ins} ins. · ${corso.tot_cfu} CFU</span>
-                </div>`;
+                <div class="tree-classe tree-node">
+                  <div class="tree-classe-header" onclick="toggleNodo(this)">
+                    <span class="freccia">▶</span>
+                    <span>${codiceClasse ? codiceClasse + ' · ' : ''}${escHtml(cl.classe)}</span>
+                    <span class="badge-stat-classe">${cl.corsi.length} cors${cl.corsi.length === 1 ? 'o' : 'i'} · ${cl.tot_cfu} CFU</span>
+                  </div>
+                  <div class="tree-classe-children">`;
+
+          cl.corsi.forEach(corso => {
+            const zanBadge = corso._zanCorso
+              ? '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af;margin-left:4px">ZAN</span>' : '';
+            const disBadge = corso._disattivato
+              ? `<span class="badge-disattivato" title="${escHtml(corso._motivo_dis)}">⛔</span>` : '';
+            const corsoCls = corso._disattivato ? ' corso-disattivato' : '';
+            html += `
+                    <div class="tree-corso${corsoCls}"
+                         onclick="apriPianoFromTree('${escHtml(a.ateneo).replace(/'/g,"\\'")}','${escHtml(corso.laurea).replace(/'/g,"\\'")}','${escHtml(corso.tipologia).replace(/'/g,"\\'")}')">
+                      <span>${escHtml(corso.laurea)}${zanBadge}${disBadge}</span>
+                      <span class="stat-corso">${corso.n_ins} ins. · ${corso.tot_cfu} CFU</span>
+                    </div>`;
+          });
+
+          html += `</div></div>`;
         });
+
         html += `</div></div>`;
       });
+
       html += `</div></div>`;
     });
+
     html += '</div>';
     container.innerHTML = html;
   }
@@ -2974,6 +3144,49 @@
       '<p style="color:red;padding:20px">Errore nel caricamento dei dati. ' +
       'Assicurati che i file CSV siano nella stessa cartella di index.html.</p>';
   });
+
+// ── BLOCCO 3: Curriculum badge con modal ──────────────────────────────────
+
+// Esposizione globale necessaria per type="module"
+window.renderCurriculum = function(row) {
+  const lista  = (row.curriculum_lista || '').trim();
+  const count  = parseInt(row.curriculum_count || row.n_curriculum || '1', 10);
+  const trasv  = (row.trasversale || '').toLowerCase() === 'trasversale';
+
+  if (!lista || lista.toLowerCase() === 'curriculum unico' || lista === '') {
+    return `<span class="badge-curr-unico">unico</span>`;
+  }
+  if (trasv && count > 1) {
+    const escLista = lista.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const escNome  = (row.insegnamento || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return `<span class="badge-curr"
+      onclick="window.apriModaleCurriculum('${escLista}','${escNome}',${count})"
+      title="Clicca per vedere i ${count} curriculum">🎓 ${count} curriculum ▾</span>`;
+  }
+  return `<span class="badge-curr-unico">${lista}</span>`;
+};
+
+window.apriModaleCurriculum = function(curriculumLista, nomeInsegnamento, count) {
+  const curricula = curriculumLista.split('|').map(c => c.trim()).filter(c => c);
+  document.getElementById('modal-curr-titolo').textContent = nomeInsegnamento || 'Curriculum';
+  document.getElementById('modal-curr-sottotitolo').textContent =
+    `${count} curriculum disponibili per questo insegnamento`;
+  document.getElementById('modal-curr-lista').innerHTML =
+    curricula.map((c, i) => `<li><span class="curr-num">${i+1}</span>${c}</li>`).join('');
+  document.getElementById('modal-curr-overlay').classList.add('aperto');
+};
+
+// Chiusura modal
+document.getElementById('btn-chiudi-curr').addEventListener('click', function() {
+  document.getElementById('modal-curr-overlay').classList.remove('aperto');
+});
+document.getElementById('modal-curr-overlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('modal-curr-overlay')) {
+    document.getElementById('modal-curr-overlay').classList.remove('aperto');
+  }
+});
+
+// ── FINE BLOCCO 3 ─────────────────────────────────────────────────────────
 
 </script>
 <!-- ============================================================
@@ -3597,7 +3810,7 @@
       li.appendChild(infoDiv);
       li.appendChild(addBtn);
 
-    } else if (cat === 'rinominati') {
+          } else if (cat === 'rinominati') {
       infoDiv.innerHTML = `
         <div class="corso-nome">✏️ ${escHTML(item.corso_nuovo || '—')}</div>
         <div class="corso-rename">
@@ -3611,7 +3824,13 @@
           ${item.accesso   ? `<span>🔓 ${escHTML(item.accesso)}</span>` : ''}
           ${item.didattica ? `<span>💻 ${escHTML(item.didattica)}</span>` : ''}
         </div>`;
+      const btnNome = document.createElement('button');
+      btnNome.className = 'btn-azione-novita';
+      btnNome.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;font-size:0.7rem;font-weight:700;color:#fff;background:#e67e22;border:none;border-radius:14px;cursor:pointer;white-space:nowrap;margin-top:2px;';
+      btnNome.innerHTML = '🔄 Aggiorna nome';
+      btnNome.onclick = (e) => { e.stopPropagation(); apriModaleAzione('rinominato', item, chiaveAteneo); };
       li.appendChild(infoDiv);
+      li.appendChild(btnNome);
 
     } else if (cat === 'riclassificati') {
       infoDiv.innerHTML = `
@@ -3624,7 +3843,13 @@
         <div class="corso-meta">
           ${item.sedi ? `<span>📍 ${escHTML(item.sedi)}</span>` : ''}
         </div>`;
+      const btnClasse = document.createElement('button');
+      btnClasse.className = 'btn-azione-novita';
+      btnClasse.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;font-size:0.7rem;font-weight:700;color:#fff;background:#8e44ad;border:none;border-radius:14px;cursor:pointer;white-space:nowrap;margin-top:2px;';
+      btnClasse.innerHTML = '📋 Aggiorna classe';
+      btnClasse.onclick = (e) => { e.stopPropagation(); apriModaleAzione('riclassificato', item, chiaveAteneo); };
       li.appendChild(infoDiv);
+      li.appendChild(btnClasse);
 
     } else if (cat === 'disattivati') {
       infoDiv.innerHTML = `
@@ -3635,7 +3860,13 @@
           ${item.regione   ? `<span>🗺️ ${escHTML(item.regione)}</span>` : ''}
           ${item.zona      ? `<span>🧭 ${escHTML(item.zona)}</span>` : ''}
         </div>`;
+      const btnArchivia = document.createElement('button');
+      btnArchivia.className = 'btn-azione-novita';
+      btnArchivia.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;font-size:0.7rem;font-weight:700;color:#fff;background:#6b7280;border:none;border-radius:14px;cursor:pointer;white-space:nowrap;margin-top:2px;';
+      btnArchivia.innerHTML = '🗃️ Archivia';
+      btnArchivia.onclick = (e) => { e.stopPropagation(); apriModaleAzione('disattivato', item, chiaveAteneo); };
       li.appendChild(infoDiv);
+      li.appendChild(btnArchivia);
     }
 
     return li;
@@ -3791,6 +4022,203 @@ function setSelectValue(selector, value) {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+  // ── MODALE AZIONI NOVITÀ ──────────────────────────────────────
+  // Modale completamente autonomo, zero dipendenze dal codice app.
+  // Creato dinamicamente al primo utilizzo.
+
+  let _modaleAzioneEl = null;
+
+  function getModaleAzione() {
+    if (_modaleAzioneEl) return _modaleAzioneEl;
+
+    const div = document.createElement('div');
+    div.id = 'nm-ov';
+    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto;';
+    div.innerHTML = `
+      <div style="background:white;border-radius:12px;width:100%;max-width:580px;box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden;margin:auto;">
+        <div id="nm-hdr" style="padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div>
+            <div id="nm-titolo" style="font-size:1rem;font-weight:700;color:white;line-height:1.4;"></div>
+            <div id="nm-sub" style="font-size:0.82rem;opacity:0.85;color:white;margin-top:3px;"></div>
+          </div>
+          <button id="nm-x" style="background:rgba(255,255,255,0.25);color:white;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.9rem;font-weight:700;">✕</button>
+        </div>
+        <div style="padding:20px 24px;">
+          <div id="nm-info" style="border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:0.83rem;line-height:1.6;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+            <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Nome corso di laurea ✏️</label>
+              <input id="nm-laurea" type="text" style="padding:8px 10px;border:2px solid #e67e22;border-radius:6px;font-size:0.9rem;font-family:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Classe di laurea ✏️</label>
+              <input id="nm-classe" type="text" style="padding:8px 10px;border:2px solid #e67e22;border-radius:6px;font-size:0.9rem;font-family:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Tipologia</label>
+              <input id="nm-tipo" type="text" readonly style="padding:8px 10px;border:1px solid #eee;border-radius:6px;font-size:0.9rem;font-family:inherit;background:#f5f5f5;color:#888;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Ateneo</label>
+              <input id="nm-ateneo" type="text" readonly style="padding:8px 10px;border:1px solid #eee;border-radius:6px;font-size:0.9rem;font-family:inherit;background:#f5f5f5;color:#888;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Sede/i</label>
+              <input id="nm-sedi" type="text" readonly style="padding:8px 10px;border:1px solid #eee;border-radius:6px;font-size:0.9rem;font-family:inherit;background:#f5f5f5;color:#888;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;">Anno accademico</label>
+              <input id="nm-aa" type="text" readonly style="padding:8px 10px;border:1px solid #eee;border-radius:6px;font-size:0.9rem;font-family:inherit;background:#f5f5f5;color:#888;">
+            </div>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;font-size:0.78rem;color:#92400e;margin-bottom:18px;">
+            ⚠️ Verifica i campi prima di confermare. Le modifiche verranno salvate nel delta locale.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="nm-ann" style="background:#eee;color:#555;border:none;border-radius:6px;padding:9px 22px;cursor:pointer;font-size:0.9rem;font-weight:600;">Annulla</button>
+            <button id="nm-ok" style="color:white;border:none;border-radius:6px;padding:9px 22px;cursor:pointer;font-size:0.9rem;font-weight:600;">✅ Conferma</button>
+          </div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(div);
+    _modaleAzioneEl = div;
+
+    document.getElementById('nm-x').onclick   = chiudiModaleAzione;
+    document.getElementById('nm-ann').onclick  = chiudiModaleAzione;
+    div.addEventListener('click', e => { if (e.target === div) chiudiModaleAzione(); });
+
+    return div;
+  }
+
+  function chiudiModaleAzione() {
+    if (_modaleAzioneEl) _modaleAzioneEl.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function apriModaleAzione(tipo, item, chiaveAteneo) {
+    closePanel();
+
+    const eseguiApertura = (classeCompleta) => {
+      const ov = getModaleAzione();
+
+      const colori = { rinominato: '#e67e22', riclassificato: '#8e44ad', disattivato: '#6b7280' };
+      const colore = colori[tipo] || '#555';
+
+      // Header
+      const hdr = document.getElementById('nm-hdr');
+      hdr.style.background = colore;
+      document.getElementById('nm-ok').style.background = colore;
+
+      // Titoli
+      const titoli = { rinominato: '🔄 Aggiorna nome corso', riclassificato: '📋 Aggiorna classe corso', disattivato: '🗃️ Archivia corso' };
+      document.getElementById('nm-titolo').textContent = titoli[tipo];
+
+      const subs = {
+        rinominato:    `${chiaveAteneo} · ${item.classe_codice || ''} ${item.classe_nome || ''}`.trim(),
+        riclassificato:`${chiaveAteneo} · Sede: ${item.sedi || '—'}`,
+        disattivato:   `${chiaveAteneo} · ${item.tipologia || ''} · ${item.classe_nome || ''}`
+      };
+      document.getElementById('nm-sub').textContent = subs[tipo];
+
+      // Info box
+      const infoEl = document.getElementById('nm-info');
+      infoEl.style.background = colore + '18';
+      infoEl.style.border = `1px solid ${colore}55`;
+
+      const infoHTML = {
+        rinominato: `<strong>Vecchio nome:</strong> <em style="color:#c0392b">${escHTML(item.corso_vecchio||'—')}</em><br>
+                     <strong>Nuovo nome:</strong> <strong style="color:#1a7a4a">${escHTML(item.corso_nuovo||'—')}</strong>
+                     ${item.score ? ` · Similarità: <strong>${item.score}%</strong>` : ''}`,
+        riclassificato: `<strong>Corso:</strong> <strong>${escHTML(item.corso||'—')}</strong><br>
+                         <strong>Classe vecchia:</strong> <em style="color:#c0392b">${escHTML(item.classe_vecchia||'—')}</em><br>
+                         <strong>Classe nuova:</strong> <strong style="color:#1a7a4a">${escHTML(classeCompleta)}</strong>`,
+        disattivato: `<strong>Corso:</strong> <strong>${escHTML(item.corso||'—')}</strong><br>
+                      <strong>Classe:</strong> ${escHTML(item.classe_nome||'—')}<br>
+                      <strong>Regione:</strong> ${escHTML(item.regione||'—')} · <strong>Zona:</strong> ${escHTML(item.zona||'—')}`
+      };
+      infoEl.innerHTML = infoHTML[tipo];
+
+      // Campi form
+      const laurea  = document.getElementById('nm-laurea');
+      const classe  = document.getElementById('nm-classe');
+      const tipoEl  = document.getElementById('nm-tipo');
+      const ateneoEl= document.getElementById('nm-ateneo');
+      const sediEl  = document.getElementById('nm-sedi');
+      const aaEl    = document.getElementById('nm-aa');
+
+      laurea.style.borderColor  = colore;
+      classe.style.borderColor  = colore;
+
+      if (tipo === 'rinominato') {
+        laurea.value   = item.corso_nuovo || '';
+        classe.value   = `${item.classe_codice||''} — ${item.classe_nome||''}`.trim();
+        tipoEl.value   = item.tipologia || '';
+      } else if (tipo === 'riclassificato') {
+        laurea.value   = item.corso || '';
+        classe.value   = classeCompleta;
+        tipoEl.value   = item.tipologia || '';
+      } else {
+        laurea.value   = item.corso || '';
+        classe.value   = item.classe_nome || '';
+        tipoEl.value   = item.tipologia || '';
+      }
+
+      ateneoEl.value = chiaveAteneo;
+      sediEl.value   = item.sedi || '';
+      aaEl.value     = state.data?.aa_riferimento || '2024/25';
+
+      // Pulsante conferma — ricrea per evitare listener duplicati
+      const okOld = document.getElementById('nm-ok');
+      const okNew = okOld.cloneNode(true);
+      okNew.style.background = colore;
+      okOld.parentNode.replaceChild(okNew, okOld);
+      okNew.onclick = () => {
+        const msg = tipo === 'rinominato'
+          ? `✅ Rinominato: "${escHTML(laurea.value)}" salvato nel delta`
+          : tipo === 'riclassificato'
+          ? `✅ Riclassificato: "${escHTML(laurea.value)}" · ${escHTML(classe.value)}`
+          : `✅ Archiviato: "${escHTML(laurea.value)}"`;
+        chiudiModaleAzione();
+        // Qui puoi aggiungere la logica di salvataggio nel delta
+        const toast = document.createElement('div');
+        toast.textContent = msg;
+        Object.assign(toast.style, {
+          position:'fixed', bottom:'24px', right:'24px',
+          background: colore, color:'white', padding:'12px 20px',
+          borderRadius:'8px', fontWeight:'600', fontSize:'0.9rem',
+          boxShadow:'0 4px 16px rgba(0,0,0,0.2)', zIndex:'9999',
+          transition:'opacity 0.4s', maxWidth:'360px'
+        });
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; }, 2400);
+        setTimeout(() => { document.body.removeChild(toast); }, 2900);
+      };
+
+      ov.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      laurea.focus();
+    };
+
+    // Per i riclassificati recupera il codice classe dal lookup
+    if (tipo === 'riclassificato') {
+      const getLookup = () => {
+        if (window._classiLookupCache) return Promise.resolve(window._classiLookupCache);
+        return fetch('classi_lookup.json', { cache: 'no-cache' })
+          .then(r => r.ok ? r.json() : {})
+          .then(data => { window._classiLookupCache = data; return data; })
+          .catch(() => ({}));
+      };
+      getLookup().then(lookup => {
+        const key    = (item.classe_nuova || '').toLowerCase().trim();
+        const codice = (lookup || {})[key] || '';
+        const classeCompleta = codice ? `${codice} — ${item.classe_nuova}` : item.classe_nuova || '';
+        setTimeout(() => eseguiApertura(classeCompleta), 300);
+      });
+    } else {
+      setTimeout(() => eseguiApertura(''), 300);
+    }
+  }
 
   // ── 16. API PUBBLICA (opzionale, per debug da console) ────────
   window.NovitaManager = {
@@ -3818,5 +4246,20 @@ function setSelectValue(selector, value) {
 
 })();
 </script>
+<!-- MODALE LISTA CURRICULUM -->
+<div id="modal-curr-overlay">
+  <div id="modal-curr-box">
+    <div id="modal-curr-header">
+      <div>
+        <h3 id="modal-curr-titolo">Curriculum</h3>
+        <p  id="modal-curr-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-curr">✕ Chiudi</button>
+    </div>
+    <div id="modal-curr-body">
+      <ul class="curr-list" id="modal-curr-lista"></ul>
+    </div>
+  </div>
+</div>
 </body>
 </html>
