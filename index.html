@@ -955,6 +955,117 @@
       padding: 3px 10px; font-size: 0.78rem; font-weight: 600;
       margin-left: 12px; vertical-align: middle;
     }
+    /* ── BADGE CURRICULUM SINTETICO ── */
+.badge-curr {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.badge-curr:hover {
+  background: #ede9fe;
+  border-color: #a855f7;
+}
+.badge-curr-unico {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── MODALE LISTA CURRICULUM ── */
+#modal-curr-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1300;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 16px;
+}
+#modal-curr-overlay.aperto { display: flex; }
+#modal-curr-box {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  overflow: hidden;
+}
+#modal-curr-header {
+  background: #6b21a8;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+#modal-curr-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+#modal-curr-header p {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-top: 3px;
+}
+#btn-chiudi-curr {
+  background: rgba(255,255,255,0.25);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 11px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+#btn-chiudi-curr:hover { background: rgba(255,255,255,0.4); }
+#modal-curr-body {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.curr-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.curr-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+.curr-list li:last-child { border-bottom: none; }
+.curr-list li:hover { background: #faf5ff; }
+.curr-list li::before {
+  content: "◈";
+  color: #a855f7;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
   </style>
 </head>
 <body>
@@ -1893,7 +2004,7 @@
         { title: 'A.',  data: 'anno_ins' },
         { title: 'CFU', data: 'cfu' },
         { title: 'Curriculum', data: 'n_curriculum',
-          render: (v, _, row) => v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista },
+              render: (v, _, row) => window.renderCurriculum ? window.renderCurriculum(row) : (v > 1 ? `${v} (${row.curriculum_lista})` : row.curriculum_lista) },
         { title: 'Link', data: 'url_ins',
           render: v => v && v !== 'NA' && v !== 'null' && v !== ''
             ? `<a class="link-ins" href="${v}" target="_blank">🔗</a>` : '' },
@@ -2667,8 +2778,9 @@
             </tr></thead>
             <tbody>`;
         ins.forEach(r => {
-          const trasv  = (r.trasversale === '1' || r.trasversale === 'true')
-            ? '<span class="badge-trasv">trasversale</span>' : '';
+          const trasv = (r.trasversale === 'trasversale')
+          ? renderCurriculum(r) : 
+          `<span class="badge-curr-unico">${r.curriculum_lista || 'unico'}</span>`;
           const modIcn = r._modificato
             ? '<span title="Modificato localmente" style="margin-left:4px">🔄</span>' : '';
           const zanIcn = r._aggiunto
@@ -2683,7 +2795,7 @@
             <td>${escHtml(r.insegnamento)}${trasv}${modIcn}${zanIcn}${disIcn}</td>
             <td>${escHtml(r.ssd)}</td>
             <td>${escHtml(r.cfu)}</td>
-            <td>${escHtml(r.curriculum_lista || '')}</td>
+            <td>${renderCurriculum(r)}</td>
             <td>${link}</td>
           </tr>`;
         });
@@ -3032,6 +3144,49 @@
       '<p style="color:red;padding:20px">Errore nel caricamento dei dati. ' +
       'Assicurati che i file CSV siano nella stessa cartella di index.html.</p>';
   });
+
+// ── BLOCCO 3: Curriculum badge con modal ──────────────────────────────────
+
+// Esposizione globale necessaria per type="module"
+window.renderCurriculum = function(row) {
+  const lista  = (row.curriculum_lista || '').trim();
+  const count  = parseInt(row.curriculum_count || row.n_curriculum || '1', 10);
+  const trasv  = (row.trasversale || '').toLowerCase() === 'trasversale';
+
+  if (!lista || lista.toLowerCase() === 'curriculum unico' || lista === '') {
+    return `<span class="badge-curr-unico">unico</span>`;
+  }
+  if (trasv && count > 1) {
+    const escLista = lista.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const escNome  = (row.insegnamento || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return `<span class="badge-curr"
+      onclick="window.apriModaleCurriculum('${escLista}','${escNome}',${count})"
+      title="Clicca per vedere i ${count} curriculum">🎓 ${count} curriculum ▾</span>`;
+  }
+  return `<span class="badge-curr-unico">${lista}</span>`;
+};
+
+window.apriModaleCurriculum = function(curriculumLista, nomeInsegnamento, count) {
+  const curricula = curriculumLista.split('|').map(c => c.trim()).filter(c => c);
+  document.getElementById('modal-curr-titolo').textContent = nomeInsegnamento || 'Curriculum';
+  document.getElementById('modal-curr-sottotitolo').textContent =
+    `${count} curriculum disponibili per questo insegnamento`;
+  document.getElementById('modal-curr-lista').innerHTML =
+    curricula.map((c, i) => `<li><span class="curr-num">${i+1}</span>${c}</li>`).join('');
+  document.getElementById('modal-curr-overlay').classList.add('aperto');
+};
+
+// Chiusura modal
+document.getElementById('btn-chiudi-curr').addEventListener('click', function() {
+  document.getElementById('modal-curr-overlay').classList.remove('aperto');
+});
+document.getElementById('modal-curr-overlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('modal-curr-overlay')) {
+    document.getElementById('modal-curr-overlay').classList.remove('aperto');
+  }
+});
+
+// ── FINE BLOCCO 3 ─────────────────────────────────────────────────────────
 
 </script>
 <!-- ============================================================
@@ -4091,5 +4246,20 @@ function setSelectValue(selector, value) {
 
 })();
 </script>
+<!-- MODALE LISTA CURRICULUM -->
+<div id="modal-curr-overlay">
+  <div id="modal-curr-box">
+    <div id="modal-curr-header">
+      <div>
+        <h3 id="modal-curr-titolo">Curriculum</h3>
+        <p  id="modal-curr-sottotitolo"></p>
+      </div>
+      <button id="btn-chiudi-curr">✕ Chiudi</button>
+    </div>
+    <div id="modal-curr-body">
+      <ul class="curr-list" id="modal-curr-lista"></ul>
+    </div>
+  </div>
+</div>
 </body>
 </html>
