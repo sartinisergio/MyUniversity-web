@@ -1759,10 +1759,22 @@ table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
   const salvaAggiungeIns    = arr => salvaLS(LS_KEY_AGG_INS, arr);
   const salvaAggiungeCorsi  = arr => salvaLS(LS_KEY_AGG_CRS, arr);
 
+  function normalizzaPerChiave(s) {
+    return (s || '').toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\x00-\x7F]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
   function chiaveRecord(row) {
     return [row.ateneo, row.laurea, row.insegnamento, row.anno_ins]
-      .map(s => (s||'').trim()).join('||');
+      .map(normalizzaPerChiave)
+      .join('||');
   }
+
   function chiaveCorso(ateneo, laurea) {
     return `${(ateneo||'').trim()}||${(laurea||'').trim()}`;
   }
@@ -1847,6 +1859,7 @@ table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
      conn = await db.connect();
     window.__muConn = conn;                          // esposto per tab-lauree
+    window.__muChiaveRecord = chiaveRecord;
     document.getElementById('status').textContent = 'Caricamento CSV...';
     await caricaCSV();
   }
@@ -2880,13 +2893,15 @@ table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
       `;
       const res  = await conn.query(sql);
       let rows = res.toArray().map(r => {
-        const obj = {};
-        Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
-        return obj;
-      });
+  const obj = {};
+  Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+  obj.ateneo = ateneo;
+  obj.laurea = laurea;
+  return obj;
+});
 
-      // Applica modifiche e disattivazioni
-      rows = applicaModifiche(rows);
+// Applica modifiche e disattivazioni
+rows = applicaModifiche(rows);
 
       // Aggiungi insegnamenti ZAN- per questo corso
       const zan = leggiAggungeIns()
@@ -3113,6 +3128,18 @@ table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
         }));
 
       renderAlbero(alberoCompleto);
+      // Badge + ZAN sulle classi che contengono corsi aggiunti
+      document.querySelectorAll('.tree-classe').forEach(nodoClasse => {
+        const haZan = nodoClasse.querySelector('.tree-corso .badge-disattivato[style*="dbeafe"]');
+        if (haZan) {
+          const headerSpan = nodoClasse.querySelector('.tree-classe-header > span:nth-child(2)');
+          if (headerSpan && !headerSpan.querySelector('.zan-classe-badge')) {
+            headerSpan.insertAdjacentHTML('beforeend',
+              ' <span class="zan-classe-badge" style="display:inline-block;background:#dbeafe;color:#1e40af;font-size:0.68rem;font-weight:600;border-radius:10px;padding:1px 7px;margin-left:5px;vertical-align:middle;">+ ZAN</span>'
+            );
+          }
+        }
+      });
       const totCorsi = rows.length;
       document.getElementById('va-contatore').textContent =
         `${alberoCompleto.length} atenei · ${totCorsi} corsi di laurea`;
@@ -3176,7 +3203,7 @@ table#tabella-lauree tbody tr:hover { background: #fff8f8; cursor: pointer; }
               </div>
               <div class="tree-tipologia-children" style="display:none;">`;
 
-        tip.classi.forEach(cl => {
+          tip.classi.forEach(cl => {
           const codiceClasse = lookupClassi[(cl.classe || '').toLowerCase()] || '';
           html += `
                 <div class="tree-classe tree-node">
@@ -3949,7 +3976,17 @@ document.getElementById('modal-curr-overlay').addEventListener('click', function
       Object.entries(mappa).sort(([a], [b]) => a.localeCompare(b))
     );
   }
-
+   // ── Verifica se un corso è già stato aggiunto come ZAN- ────────
+  function isCorsoGiaAggiunto(ateneo, nomeCorso) {
+    if (!ateneo || !nomeCorso) return false;
+    try {
+      const corsi = JSON.parse(localStorage.getItem('myuniversity_aggiunte_corsi_v1') || '[]');
+      const norm = s => (s || '').toLowerCase().trim();
+      return corsi.some(c =>
+        norm(c.ateneo) === norm(ateneo) && norm(c.laurea) === norm(nomeCorso)
+      );
+    } catch(e) { return false; }
+  }
   // ── 10. COSTRUISCE ELEMENTO SINGOLO CORSO ─────────────────────
   function buildCorsoItem(item, cat, chiaveAteneo) {
     const li = document.createElement('li');
@@ -3968,19 +4005,29 @@ document.getElementById('modal-curr-overlay').addEventListener('click', function
           ${item.didattica? `<span>💻 ${escHTML(item.didattica)}</span>` : ''}
         </div>`;
 
-      // Pulsante "Aggiungi corso"
-      const addBtn = document.createElement('button');
-      addBtn.className = 'btn-aggiungi-corso';
-      addBtn.innerHTML = '➕ Aggiungi';
-      addBtn.title = `Apri form precompilato per "${item.corso}"`;
-      addBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        prefillAddForm(item, chiaveAteneo);
-      });
+         // Verifica se il corso è già stato aggiunto come ZAN-
+      const giaAggiunto = isCorsoGiaAggiunto(chiaveAteneo, item.corso);
 
-      li.appendChild(infoDiv);
-      li.appendChild(addBtn);
-
+      if (giaAggiunto) {
+        const badgeGia = document.createElement('span');
+        badgeGia.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;font-size:0.7rem;font-weight:700;color:#065f46;background:#d1fae5;border:1px solid #6ee7b7;border-radius:14px;white-space:nowrap;margin-top:2px;';
+        badgeGia.innerHTML = '✅ Già aggiunto';
+        badgeGia.title = `Corso già presente nel catalogo locale`;
+        li.appendChild(infoDiv);
+        li.appendChild(badgeGia);
+      } else {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'btn-aggiungi-corso';
+        addBtn.innerHTML = '➕ Aggiungi';
+        addBtn.title = `Apri form precompilato per "${item.corso}"`;
+        addBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          prefillAddForm(item, chiaveAteneo);
+        });
+        li.appendChild(infoDiv);
+        li.appendChild(addBtn);
+      }
+      
           } else if (cat === 'rinominati') {
       infoDiv.innerHTML = `
         <div class="corso-nome">✏️ ${escHTML(item.corso_nuovo || '—')}</div>
@@ -4060,9 +4107,7 @@ document.getElementById('modal-curr-overlay').addEventListener('click', function
     setTimeout(() => {
       setInputValue('#ac-ateneo', chiaveAteneo);
       setInputValue('#ac-laurea', item.corso || '');
-      setInputValue('#ac-classe',
-        `${item.classe_codice || ''} ${item.classe_nome || ''}`.trim()
-      );
+      setInputValue('#ac-classe', item.classe_nome || '');
       setSelectValue('#ac-tipologia', item.tipologia || '');
       setInputValue('#ac-regione', item.regione || '');
       setInputValue('#ac-zona', item.zona || '');
@@ -4651,7 +4696,12 @@ function inizializzaTabellaLauree() {
       { title: 'A.A.',    data: 'anno_acc',   width: '68px' },
       { title: 'Ateneo',  data: 'ateneo' },
       { title: 'Corso di laurea', data: 'laurea',
-        render: v => `<strong>${escH(v)}</strong>` },
+        render: (v, _, row) => {
+          let out = `<strong>${escH(v)}</strong>`;
+          if (row._zanCorso) out += ' <span class="badge-disattivato" style="background:#f3e8ff;color:#7c3aed">ZAN</span>';
+          return out;
+        }
+      },
       { title: 'Tipologia', data: 'tipologia',
         render: v => badgeTipo(v) },
       { title: 'Durata',  data: 'durata', width: '60px',
@@ -4701,9 +4751,10 @@ function inizializzaTabellaLauree() {
     dom: 'rtip',
     searching: false,
     order: [[1,'asc'],[2,'asc']],
-    createdRow(row, data) {
+      createdRow(row, data) {
       $(row).css('cursor','pointer');
-      $(row).on('click', function(e) {
+      if (data._zanCorso) $(row).addClass('riga-aggiunta');
+    $(row).on('click', function(e) {
         if ($(e.target).closest('a').length) return;
         apriModaleInsegnamentiLaurea(data);
       });
@@ -4718,7 +4769,22 @@ function inizializzaTabellaLauree() {
     }
   });
 }
-
+// ── Helper per leggere corsi/insegnamenti ZAN- da localStorage ──
+function leggiAggiungeCorsiL() {
+  try { return JSON.parse(localStorage.getItem('myuniversity_aggiunte_corsi_v1') || '[]'); }
+  catch(e) { return []; }
+}
+function leggiAggiungeInsL() {
+  try { return JSON.parse(localStorage.getItem('myuniversity_aggiunte_ins_v1') || '[]'); }
+  catch(e) { return []; }
+}
+function leggiDisattL() {
+  try { return JSON.parse(localStorage.getItem('myuniversity_disattivazioni_v1') || '{}'); }
+  catch(e) { return {}; }
+}
+function chiaveCorsoL(ateneo, laurea) {
+  return `${(ateneo||'').trim()}||${(laurea||'').trim()}`;
+}
 // ── Ricerca ──────────────────────────────────────────────────────
 async function eseguiRicercaLauree() {
   const conn = window.__muConn;
@@ -4771,17 +4837,70 @@ async function eseguiRicercaLauree() {
       }
       return obj;
     });
-    LM.ultimiRisultati = rows;
-    LM.dtTable.clear().rows.add(rows).draw();
+    // ── INTERVENTO 4: Aggiungi corsi ZAN- da localStorage ──
+    const corsiZan = leggiAggiungeCorsiL();
+    const zanFiltrati = corsiZan.filter(zc => {
+      // Applica gli stessi filtri attivi nella ricerca
+      const testo = (document.getElementById('fl-laurea')?.value ?? '').trim();
+      if (testo) {
+        const gruppiOR = testo.split(',').map(g => g.trim()).filter(g => g);
+        const match = gruppiOR.some(gruppo => {
+          const parole = gruppo.split(/\s+/).filter(p => p);
+          return parole.every(p => (zc.laurea || '').toLowerCase().includes(p.toLowerCase()));
+        });
+        if (!match) return false;
+      }
+      const vZona = getValsL('fl-zona');
+      if (vZona.length && !vZona.includes(zc.zona)) return false;
+      const vReg = getValsL('fl-regione');
+      if (vReg.length && !vReg.includes(zc.regione)) return false;
+      const vAte = getValsL('fl-ateneo');
+      if (vAte.length && !vAte.includes(zc.ateneo)) return false;
+      const vTip = getValsL('fl-tipologia');
+      if (vTip.length && !vTip.includes(zc.tipologia)) return false;
+      const vCla = getValsL('fl-classe');
+      if (vCla.length && !vCla.includes(zc.nome_classe)) return false;
+      const vAA = getValsL('fl-aa');
+      if (vAA.length && !vAA.includes(zc.anno_accademico_agg)) return false;
+      // Checkbox "solo con iscritti > 0": i corsi ZAN- non hanno dati iscritti,
+      // li escludiamo se il checkbox è attivo
+      if (document.getElementById('fl-chk-isc')?.checked) return false;
+      return true;
+    }).map(zc => ({
+      anno_acc:      zc.anno_accademico_agg || '',
+      id_ateneo:     '',
+      id_laurea:     zc._id_zan || '',
+      zona:          zc.zona || '',
+      regione:       zc.regione || '',
+      ateneo:        zc.ateneo || '',
+      tipologia:     zc.tipologia || '',
+      durata:        zc.durata || '',
+      laurea:        zc.laurea || '',
+      codice_classe: LM.lookupClassi[(zc.nome_classe || '').toLowerCase().trim()] || '',
+      nome_classe:   zc.nome_classe || '',
+      isc_1anno:     '',
+      isc_totali:    '',
+      url_corso:     '',
+      _zanCorso:     true,
+      _id_zan:       zc._id_zan || '',
+    }));
+
+    const tuttiRows = [...rows, ...zanFiltrati];
+    LM.ultimiRisultati = tuttiRows;
+    LM.dtTable.clear().rows.add(tuttiRows).draw();
 
     const totQ = await conn.query(
       `SELECT COUNT(*) AS n FROM lauree l ${where}`
     );
-    const tot = Number(totQ.toArray()[0].n);
+    const totMur = Number(totQ.toArray()[0].n);
+    const totZan = zanFiltrati.length;
+    const totale = totMur + totZan;
     document.getElementById('contatore-lauree').innerHTML =
-      `<strong>${tot.toLocaleString('it-IT')}</strong> corsi di laurea trovati` +
-      (tot > 3000
-        ? ' <span style="color:#e65100;font-size:0.82rem">(mostrati i primi 3.000)</span>' : '');
+      `<strong>${totale.toLocaleString('it-IT')}</strong> corsi di laurea trovati` +
+      (totZan > 0
+        ? ` <span style="color:#7c3aed;font-size:0.82rem">(di cui ${totZan} ZAN)</span>` : '') +
+      (totMur > 3000
+        ? ' <span style="color:#e65100;font-size:0.82rem">(MUR: primi 3.000)</span>' : '');
 
     document.getElementById('btn-export-lauree').disabled = rows.length === 0;
     document.getElementById('status-lauree').textContent = 'Pronto';
@@ -4848,16 +4967,47 @@ async function apriModaleInsegnamentiLaurea(riga) {
 
     const res  = await conn.query(sql);
     let ins = res.toArray().map(r => {
-      const obj = {};
-      Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
-      return obj;
-    });
+  const obj = {};
+  Object.keys(r).forEach(k => { obj[k] = r[k] === null ? '' : String(r[k]); });
+  obj.ateneo = riga.ateneo;
+  obj.laurea = riga.laurea;
+  return obj;
+});
 
     // Applica modifiche/disattivazioni locali se disponibili
-    if (typeof window.__muApplicaModifiche === 'function') {
-      ins = window.__muApplicaModifiche(ins);
-    }
-
+    await new Promise(resolve => {
+      let tentativi = 0;
+      const attendi = setInterval(() => {
+        tentativi++;
+        if (typeof window.__muApplicaModifiche === 'function') {
+          clearInterval(attendi);
+          ins = window.__muApplicaModifiche(ins);
+          resolve();
+        } else if (tentativi > 20) {
+          clearInterval(attendi);
+          console.warn('[MU] __muApplicaModifiche non disponibile dopo 2s');
+          resolve();
+        }
+      }, 100);
+    });
+     // ── INTERVENTO 5: Aggiungi insegnamenti ZAN- per questo corso ──
+     const zanIns = leggiAggiungeInsL()
+      .filter(a => a.ateneo === riga.ateneo && a.laurea === riga.laurea)
+      .map(a => {
+        const dis = leggiDisattL();
+        const k   = window.__muChiaveRecord ? window.__muChiaveRecord(a) : '';
+        let r     = { ...a, _aggiunto: true };
+        if (k && dis[k] && dis[k].tipo === 'insegnamento') {
+          r = { ...r, _disattivato: true, _motivo_dis: dis[k].motivo };
+        }
+        const kc = chiaveCorsoL(a.ateneo, a.laurea);
+        if (dis[kc] && dis[kc].tipo === 'corso') {
+          r = { ...r, _disattivato: true, _corso_disattivato: true, _motivo_dis: dis[kc].motivo };
+        }
+        return r;
+      });
+    ins = [...ins, ...zanIns];
+        
     // Scheda riepilogativa
     const totIns = ins.filter(r => !r._disattivato).length;
     const totCfu = ins.filter(r => !r._disattivato)
@@ -4891,7 +5041,11 @@ async function apriModaleInsegnamentiLaurea(riga) {
       </div>
       <div class="laurea-scheda-item">
         <span class="ls-label">Insegnamenti attivi</span>
-        <span class="ls-val">${totIns} · ${totCfu} CFU</span>
+        <span class="ls-val">${totIns} · ${totCfu} CFU${
+          ins.filter(r => r._aggiunto).length > 0
+            ? ` <span style="color:#1e40af;font-size:0.78rem">(+ ${ins.filter(r => r._aggiunto).length} ZAN)</span>`
+            : ''
+        }</span>
       </div>
       ${riga.url_corso && riga.url_corso !== 'NA' && riga.url_corso !== ''
         ? `<div class="laurea-scheda-item">
@@ -4946,9 +5100,11 @@ async function apriModaleInsegnamentiLaurea(riga) {
           </tr></thead>
           <tbody>`;
 
-      righe.forEach(r => {
+        righe.forEach(r => {
         const modI  = r._modificato
           ? '<span title="Modificato localmente" style="margin-left:4px">🔄</span>' : '';
+        const zanI  = r._aggiunto
+          ? '<span class="badge-disattivato" style="background:#dbeafe;color:#1e40af;margin-left:4px">ZAN</span>' : '';
         const disI  = r._disattivato
           ? `<span class="badge-disattivato"
                    title="${escH(r._motivo_dis||'')}">⛔ non attivo</span>` : '';
@@ -4964,13 +5120,13 @@ async function apriModaleInsegnamentiLaurea(riga) {
           : `<span class="badge-curr-unico">${escH(r.curriculum_lista||'unico')}</span>`;
 
         html += `<tr${trCls}${trSty}>
-          <td>${escH(r.insegnamento)}${modI}${disI}</td>
+          <td>${escH(r.insegnamento)}${modI}${zanI}${disI}</td>
           <td>${escH(r.ssd)}</td>
           <td>${escH(r.cfu)}</td>
           <td>${curr}</td>
           <td>${link}</td>
         </tr>`;
-      });
+          });
       html += `</tbody></table></div>`;
     });
 
